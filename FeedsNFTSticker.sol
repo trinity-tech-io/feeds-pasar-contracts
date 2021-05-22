@@ -218,6 +218,7 @@ abstract contract BaseUtils {
     bytes4 internal constant ERC1155_BATCH_ACCEPTED = 0xbc197c81;
     bytes4 internal constant INTERFACE_SIGNATURE_ERC165 = 0x01ffc9a7;
     bytes4 internal constant INTERFACE_SIGNATURE_ERC1155 = 0xd9b67a26;
+    bytes4 internal constant INTERFACE_SIGNATURE_TokenRoyalty = 0x96f7b536;
 
     uint256 internal constant RATE_BASE = 1000000;
 
@@ -274,13 +275,16 @@ contract FeedsNFTSticker is
     mapping(address => uint256[]) internal ownerToTokenIds;
     mapping(uint256 => mapping(address => uint256)) internal tokenIdToIndexByOwner;
 
-    string internal name_ = "Feeds NFT Sticker";
-    string internal symbol_ = "FSTK";
-    string internal version = "v0.1";
-    string internal magic = "20210511";
+    string internal constant name_ = "Feeds NFT Sticker";
+    string internal constant symbol_ = "FSTK";
+    string internal constant version = "v0.1";
+    string internal constant magic = "20210511";
 
     function supportsInterface(bytes4 _interfaceId) public pure override returns (bool) {
-        return _interfaceId == INTERFACE_SIGNATURE_ERC165 || _interfaceId == INTERFACE_SIGNATURE_ERC1155;
+        return
+            _interfaceId == INTERFACE_SIGNATURE_ERC165 ||
+            _interfaceId == INTERFACE_SIGNATURE_ERC1155 ||
+            _interfaceId == INTERFACE_SIGNATURE_TokenRoyalty;
     }
 
     function safeTransferFrom(
@@ -448,11 +452,11 @@ contract FeedsNFTSticker is
         _safeBatchTransferFrom(_from, _to, _ids, _values, "");
     }
 
-    function name() external view override returns (string memory) {
+    function name() external pure override returns (string memory) {
         return name_;
     }
 
-    function symbol() external view override returns (string memory) {
+    function symbol() external pure override returns (string memory) {
         return symbol_;
     }
 
