@@ -25,6 +25,12 @@ interface IERC165 {
     function supportsInterface(bytes4 interfaceID) external view returns (bool);
 }
 
+interface IFeedsContractProxiable {
+    function updateCodeAddress(address _newAddress) external;
+
+    function getCodeAddress() external view returns (address);
+}
+
 interface IERC1155 {
     event TransferSingle(
         address indexed _operator,
@@ -213,12 +219,13 @@ library AddressUtils {
     }
 }
 
-abstract contract BaseUtils {
+abstract contract BaseUtils is IFeedsContractProxiable {
     bytes4 internal constant ERC1155_ACCEPTED = 0xf23a6e61;
     bytes4 internal constant ERC1155_BATCH_ACCEPTED = 0xbc197c81;
     bytes4 internal constant INTERFACE_SIGNATURE_ERC165 = 0x01ffc9a7;
     bytes4 internal constant INTERFACE_SIGNATURE_ERC1155 = 0xd9b67a26;
     bytes4 internal constant INTERFACE_SIGNATURE_TokenRoyalty = 0x96f7b536;
+    bytes4 internal constant INTERFACE_SIGNATURE_FeedsContractProxiable = 0xc1fdc5a0;
 
     uint256 internal constant RATE_BASE = 1000000;
 
@@ -227,10 +234,21 @@ abstract contract BaseUtils {
     uint256 private constant GUARD_BLOCK = 2;
 
     address public owner;
+    bool public initialized = false;
 
-    constructor() {
+    function _initialize() internal {
+        require(!initialized, "Contract already initialized");
         guard = GUARD_PASS;
         owner = msg.sender;
+    }
+
+    function initialize() external {
+        _initialize();
+    }
+
+    modifier inited() {
+        require(initialized, "Contract not initialized");
+        _;
     }
 
     modifier reentrancyGuard() {
@@ -245,8 +263,24 @@ abstract contract BaseUtils {
         _;
     }
 
-    function transferOwnership(address _owner) external onlyOwner {
+    function transferOwnership(address _owner) external inited onlyOwner {
         owner = _owner;
+    }
+
+    function updateCodeAddress(address _newAddress) external override inited onlyOwner {
+        require(IERC165(_newAddress).supportsInterface(0xc1fdc5a0), "Contract address not proxiable");
+
+        // solium-disable-next-line security/no-inline-assembly
+        assembly {
+            sstore(0xc5f16f0fcc639fa48a6947836d9850f504798523bf8c9a3a87d5876cf622bcf7, _newAddress)
+        }
+    }
+
+    function getCodeAddress() external view override returns (address _codeAddress) {
+        // solium-disable-next-line security/no-inline-assembly
+        assembly {
+            _codeAddress := sload(0xc5f16f0fcc639fa48a6947836d9850f504798523bf8c9a3a87d5876cf622bcf7)
+        }
     }
 }
 
@@ -280,11 +314,12 @@ contract FeedsNFTSticker is
     string internal constant version = "v0.1";
     string internal constant magic = "20210511";
 
-    function supportsInterface(bytes4 _interfaceId) public pure override returns (bool) {
+    function supportsInterface(bytes4 _interfaceId) external pure override returns (bool) {
         return
             _interfaceId == INTERFACE_SIGNATURE_ERC165 ||
             _interfaceId == INTERFACE_SIGNATURE_ERC1155 ||
-            _interfaceId == INTERFACE_SIGNATURE_TokenRoyalty;
+            _interfaceId == INTERFACE_SIGNATURE_TokenRoyalty ||
+            _interfaceId == INTERFACE_SIGNATURE_FeedsContractProxiable;
     }
 
     function safeTransferFrom(
@@ -293,7 +328,7 @@ contract FeedsNFTSticker is
         uint256 _id,
         uint256 _value,
         bytes calldata _data
-    ) public override reentrancyGuard {
+    ) external override inited reentrancyGuard {
         _safeTransferFrom(_from, _to, _id, _value, _data);
     }
 
@@ -303,7 +338,7 @@ contract FeedsNFTSticker is
         uint256[] calldata _ids,
         uint256[] calldata _values,
         bytes calldata _data
-    ) external override reentrancyGuard {
+    ) external override inited reentrancyGuard {
         _safeBatchTransferFrom(_from, _to, _ids, _values, _data);
     }
 
@@ -439,7 +474,7 @@ contract FeedsNFTSticker is
         address _to,
         uint256 _id,
         uint256 _value
-    ) external override reentrancyGuard {
+    ) external override inited reentrancyGuard {
         _safeTransferFrom(_from, _to, _id, _value, "");
     }
 
@@ -448,7 +483,7 @@ contract FeedsNFTSticker is
         address _to,
         uint256[] calldata _ids,
         uint256[] calldata _values
-    ) external override reentrancyGuard {
+    ) external override inited reentrancyGuard {
         _safeBatchTransferFrom(_from, _to, _ids, _values, "");
     }
 
@@ -572,7 +607,7 @@ contract FeedsNFTSticker is
         uint256 _tokenSupply,
         string calldata _uri,
         uint256 _royaltyFee
-    ) external override {
+    ) external override inited {
         require(_id != 0, "New TokenID cannot be zero");
         require(_tokenSupply > 0, "New Token supply cannot be zero");
         require(tokenIdToToken[_id].tokenSupply == 0, "Cannot mint token with existing supply");
@@ -604,7 +639,7 @@ contract FeedsNFTSticker is
         }
     }
 
-    function burn(uint256 _id, uint256 _value) external override {
+    function burn(uint256 _id, uint256 _value) external override inited {
         _burnFrom(msg.sender, _id, _value);
     }
 
@@ -612,7 +647,7 @@ contract FeedsNFTSticker is
         address _owner,
         uint256 _id,
         uint256 _value
-    ) external override {
+    ) external override inited {
         _burnFrom(_owner, _id, _value);
     }
 

@@ -25,6 +25,12 @@ interface IERC165 {
     function supportsInterface(bytes4 interfaceID) external view returns (bool);
 }
 
+interface IFeedsContractProxiable {
+    function updateCodeAddress(address _newAddress) external;
+
+    function getCodeAddress() external view returns (address);
+}
+
 interface IERC1155WithRoyalty {
     event TransferSingle(
         address indexed _operator,
@@ -289,13 +295,15 @@ library AddressUtils {
     }
 }
 
-abstract contract BaseUtils {
+abstract contract BaseUtils is IFeedsContractProxiable {
     bytes4 internal constant ERC1155_ACCEPTED = 0xf23a6e61;
     bytes4 internal constant ERC1155_BATCH_ACCEPTED = 0xbc197c81;
     bytes4 internal constant INTERFACE_SIGNATURE_ERC165 = 0x01ffc9a7;
     bytes4 internal constant INTERFACE_SIGNATURE_ERC1155 = 0xd9b67a26;
     bytes4 internal constant INTERFACE_SIGNATURE_ERC1155TokenReceiver = 0x4e2312e0;
     bytes4 internal constant INTERFACE_SIGNATURE_TokenRoyalty = 0x96f7b536;
+    bytes4 internal constant INTERFACE_SIGNATURE_FeedsContractProxiable = 0xc1fdc5a0;
+
     bytes internal constant PASAR_DATA_MAGIC = bytes("Feeds NFT Pasar");
 
     uint256 internal constant RATE_BASE = 1000000;
@@ -305,10 +313,21 @@ abstract contract BaseUtils {
     uint256 private constant GUARD_BLOCK = 2;
 
     address public owner;
+    bool public initialized = false;
 
-    constructor() {
+    function _initialize() internal {
+        require(!initialized, "Contract already initialized");
         guard = GUARD_PASS;
         owner = msg.sender;
+    }
+
+    function initialize() external {
+        _initialize();
+    }
+
+    modifier inited() {
+        require(initialized, "Contract not initialized");
+        _;
     }
 
     modifier reentrancyGuard() {
@@ -323,8 +342,24 @@ abstract contract BaseUtils {
         _;
     }
 
-    function transferOwnership(address _owner) external onlyOwner {
+    function transferOwnership(address _owner) external inited onlyOwner {
         owner = _owner;
+    }
+
+    function updateCodeAddress(address _newAddress) external override inited onlyOwner {
+        require(IERC165(_newAddress).supportsInterface(0xc1fdc5a0), "Contract address not proxiable");
+
+        // solium-disable-next-line security/no-inline-assembly
+        assembly {
+            sstore(0xc5f16f0fcc639fa48a6947836d9850f504798523bf8c9a3a87d5876cf622bcf7, _newAddress)
+        }
+    }
+
+    function getCodeAddress() external view override returns (address _codeAddress) {
+        // solium-disable-next-line security/no-inline-assembly
+        assembly {
+            _codeAddress := sload(0xc5f16f0fcc639fa48a6947836d9850f504798523bf8c9a3a87d5876cf622bcf7)
+        }
     }
 }
 
@@ -357,10 +392,15 @@ contract FeedsNFTPasar is IERC165, IERC1155TokenReceiver, IPasarOrder, IPasarInf
     string internal constant magic = "20210516";
 
     function supportsInterface(bytes4 _interfaceId) public pure override returns (bool) {
-        return _interfaceId == INTERFACE_SIGNATURE_ERC165 || _interfaceId == INTERFACE_SIGNATURE_ERC1155TokenReceiver;
+        return
+            _interfaceId == INTERFACE_SIGNATURE_ERC165 ||
+            _interfaceId == INTERFACE_SIGNATURE_ERC1155TokenReceiver ||
+            _interfaceId == INTERFACE_SIGNATURE_FeedsContractProxiable;
     }
 
-    constructor(address _tokenAddress) {
+    function initialize(address _tokenAddress) external {
+        _initialize();
+
         require(
             IERC165(_tokenAddress).supportsInterface(INTERFACE_SIGNATURE_ERC1155) &&
                 IERC165(_tokenAddress).supportsInterface(INTERFACE_SIGNATURE_TokenRoyalty),
@@ -376,7 +416,7 @@ contract FeedsNFTPasar is IERC165, IERC1155TokenReceiver, IPasarOrder, IPasarInf
         uint256 _id,
         uint256 _value,
         bytes calldata _data
-    ) external override returns (bytes4) {
+    ) external override inited returns (bytes4) {
         emit ERC1155Received(_operator, _from, _id, _value, _data);
         return ERC1155_ACCEPTED;
     }
@@ -387,7 +427,7 @@ contract FeedsNFTPasar is IERC165, IERC1155TokenReceiver, IPasarOrder, IPasarInf
         uint256[] calldata _ids,
         uint256[] calldata _values,
         bytes calldata _data
-    ) external override returns (bytes4) {
+    ) external override inited returns (bytes4) {
         emit ERC1155BatchReceived(_operator, _from, _ids, _values, _data);
         return ERC1155_BATCH_ACCEPTED;
     }
@@ -396,7 +436,7 @@ contract FeedsNFTPasar is IERC165, IERC1155TokenReceiver, IPasarOrder, IPasarInf
         uint256 _tokenId,
         uint256 _amount,
         uint256 _price
-    ) external override reentrancyGuard {
+    ) external override inited reentrancyGuard {
         require(token.isApprovedForAll(msg.sender, address(this)), "Contract is not approved");
         require(_amount > 0 && _price > 0, "Amount and price cannot be zero");
 
@@ -424,7 +464,7 @@ contract FeedsNFTPasar is IERC165, IERC1155TokenReceiver, IPasarOrder, IPasarInf
         uint256 _amount,
         uint256 _minPrice,
         uint256 _endTime
-    ) external override reentrancyGuard {
+    ) external override inited reentrancyGuard {
         require(token.isApprovedForAll(msg.sender, address(this)), "Contract is not approved");
         require(_amount > 0 && _minPrice > 0, "Amount and price cannot be zero");
         require(_endTime > block.timestamp, "End time cannot be in the past");
@@ -464,7 +504,7 @@ contract FeedsNFTPasar is IERC165, IERC1155TokenReceiver, IPasarOrder, IPasarInf
         addrToSeller[_seller].openCount = sellerOpenOrders[_seller].length;
     }
 
-    function buyOrder(uint256 _orderId) external payable override reentrancyGuard {
+    function buyOrder(uint256 _orderId) external payable override inited reentrancyGuard {
         require(orders[_orderId].orderType == 1 && orders[_orderId].orderState == 1, "Invalid order ID");
         require(msg.value == orders[_orderId].price, "Must pay the exact price for order");
 
@@ -472,7 +512,7 @@ contract FeedsNFTPasar is IERC165, IERC1155TokenReceiver, IPasarOrder, IPasarInf
         _fillOrder(msg.sender, _orderId, msg.value);
     }
 
-    function bidForOrder(uint256 _orderId) external payable override reentrancyGuard {
+    function bidForOrder(uint256 _orderId) external payable override inited reentrancyGuard {
         require(orders[_orderId].orderType == 2 && orders[_orderId].orderState == 1, "Invalid order ID");
         if (orders[_orderId].endTime < block.timestamp) {
             _settleAuction(_orderId);
@@ -506,7 +546,7 @@ contract FeedsNFTPasar is IERC165, IERC1155TokenReceiver, IPasarOrder, IPasarInf
         }
     }
 
-    function cancelOrder(uint256 _orderId) external override reentrancyGuard {
+    function cancelOrder(uint256 _orderId) external override inited reentrancyGuard {
         require(orders[_orderId].orderState == 1, "Invalid order state");
         require(msg.sender == orders[_orderId].sellerAddr, "Only seller can cancel own order");
 
@@ -521,13 +561,13 @@ contract FeedsNFTPasar is IERC165, IERC1155TokenReceiver, IPasarOrder, IPasarInf
         _cancelOrder(_orderId);
     }
 
-    function settleAuctionOrder(uint256 _orderId) external override reentrancyGuard {
+    function settleAuctionOrder(uint256 _orderId) external override inited reentrancyGuard {
         require(orders[_orderId].orderType == 2 && orders[_orderId].endTime < block.timestamp, "Invalid order ID");
 
         _settleAuction(_orderId);
     }
 
-    function changeOrderPrice(uint256 _orderId, uint256 _price) external override reentrancyGuard {
+    function changeOrderPrice(uint256 _orderId, uint256 _price) external override inited reentrancyGuard {
         require(orders[_orderId].orderState == 1, "Invalid order state");
         require(msg.sender == orders[_orderId].sellerAddr, "Only seller can change own order price");
 

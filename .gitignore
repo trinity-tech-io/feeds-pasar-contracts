@@ -1,0 +1,9 @@
+logs
+*.log
+
+.prettierrc
+
+node_modules/
+jspm_packages/
+
+.npm
