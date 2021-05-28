@@ -238,6 +238,7 @@ abstract contract BaseUtils is IFeedsContractProxiable {
 
     function _initialize() internal {
         require(!initialized, "Contract already initialized");
+        initialized = true;
         guard = GUARD_PASS;
         owner = msg.sender;
     }
@@ -381,6 +382,7 @@ contract FeedsNFTSticker is
     ) internal {
         require(_to != address(0x0), "Receiver cannot be zero address");
         require(_from == msg.sender || operatorApproval[_from][msg.sender] == true, "Sender is not operator");
+        require(balances[_id][_from] >= _value, "Not enough token balance");
 
         if (balances[_id][_to] <= 0 && _value > 0) {
             _addTokenToOwner(_id, _to);
@@ -418,6 +420,7 @@ contract FeedsNFTSticker is
         for (uint256 i = 0; i < _ids.length; ++i) {
             uint256 id = _ids[i];
             uint256 value = _values[i];
+            require(balances[id][_from] >= value, "Not enough token balance");
 
             if (balances[id][_to] <= 0 && value > 0) {
                 _addTokenToOwner(id, _to);

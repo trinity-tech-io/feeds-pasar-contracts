@@ -317,6 +317,7 @@ abstract contract BaseUtils is IFeedsContractProxiable {
 
     function _initialize() internal {
         require(!initialized, "Contract already initialized");
+        initialized = true;
         guard = GUARD_PASS;
         owner = msg.sender;
     }
