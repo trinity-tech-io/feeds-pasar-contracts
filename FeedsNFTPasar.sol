@@ -450,6 +450,7 @@ contract FeedsNFTPasar is IERC165, IERC1155TokenReceiver, IPasarOrder, IPasarInf
         newOrder.tokenId = _tokenId;
         newOrder.amount = _amount;
         newOrder.price = _price;
+        newOrder.sellerAddr = msg.sender;
         orders.push(newOrder);
 
         openOrderToIndex[newOrder.orderId] = openOrders.length;
@@ -480,6 +481,7 @@ contract FeedsNFTPasar is IERC165, IERC1155TokenReceiver, IPasarOrder, IPasarInf
         newOrder.amount = _amount;
         newOrder.price = _minPrice;
         newOrder.endTime = _endTime;
+        newOrder.sellerAddr = msg.sender;
         orders.push(newOrder);
 
         openOrderToIndex[newOrder.orderId] = openOrders.length;
