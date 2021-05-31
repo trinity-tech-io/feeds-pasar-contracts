@@ -114,7 +114,7 @@ const testDeploy = async (deployer) => {
     const initedSticker = await proxiedSticker.methods.initialized().call();
     expect(initStickerStatus, "Proxied Sticker contract initialize transaction status").to.equal(true);
     expect(initedSticker, "Proxied Sticker contract initialized result").to.equal(true);
-    console.log("Proxied Sticker contract intialized successfully");
+    console.log("Proxied Sticker contract initialized successfully");
 
     // Initialize proxied Pasar contract
     const initPasarData = proxiedPasar.methods.initialize(proxyStickerAddr).encodeABI();
@@ -131,7 +131,7 @@ const testDeploy = async (deployer) => {
     expect(initPasarStatus, "Proxied Pasar contract initialize transaction status").to.equal(true);
     expect(initedPasar, "Proxied Pasar contract initialized result").to.equal(true);
     expect(tokenAddrPasar, "Proxied Pasar initialized with token address").to.equal(proxyStickerAddr);
-    console.log(`Proxied Pasar contract intialized successfully with token address ${proxyStickerAddr}`);
+    console.log(`Proxied Pasar contract initialized successfully with token address ${proxyStickerAddr}`);
 
     return { stickerAddr, pasarAddr, proxyStickerAddr, proxyPasarAddr };
   } catch (err) {
