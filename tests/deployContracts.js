@@ -2,7 +2,7 @@ const path = require("path");
 const expect = require("chai").expect;
 const { getParams, getWeb3, getAccount, compileContract, sendTxWaitForReceipt } = require("./utils");
 
-const testDeploy = async (deployer) => {
+const testDeploy = async (deployer, gasPrice) => {
   try {
     // Compile contract code
     const { abi: stickerABI, bytecode: stickerCode } = await compileContract(
@@ -35,7 +35,7 @@ const testDeploy = async (deployer) => {
     const pasarContract = new web3.eth.Contract(pasarABI);
     const proxyContract = new web3.eth.Contract(proxyABI);
 
-    //Prepare to deployer account
+    //Prepare deployer account
     const acc = await getAccount(deployer);
     console.log("Deployer account generated");
 
@@ -45,6 +45,7 @@ const testDeploy = async (deployer) => {
       from: acc.address,
       value: 0,
       data: stickerData,
+      gasPrice,
     };
 
     const { contractAddress: stickerAddr, status: stickerStatus } = await sendTxWaitForReceipt(stickerTx, acc);
@@ -58,6 +59,7 @@ const testDeploy = async (deployer) => {
       from: acc.address,
       value: 0,
       data: pasarData,
+      gasPrice,
     };
 
     const { contractAddress: pasarAddr, status: pasarStatus } = await sendTxWaitForReceipt(pasarTx, acc);
@@ -71,6 +73,7 @@ const testDeploy = async (deployer) => {
       from: acc.address,
       value: 0,
       data: proxyStickerData,
+      gasPrice,
     };
 
     const { contractAddress: proxyStickerAddr, status: proxyStickerStatus } = await sendTxWaitForReceipt(
@@ -87,6 +90,7 @@ const testDeploy = async (deployer) => {
       from: acc.address,
       value: 0,
       data: proxyPasarData,
+      gasPrice,
     };
 
     const { contractAddress: proxyPasarAddr, status: proxyPasarStatus } = await sendTxWaitForReceipt(
@@ -108,6 +112,7 @@ const testDeploy = async (deployer) => {
       to: proxyStickerAddr,
       value: 0,
       data: initStickerData,
+      gasPrice,
     };
 
     const { status: initStickerStatus } = await sendTxWaitForReceipt(initStickerTx, acc);
@@ -123,6 +128,7 @@ const testDeploy = async (deployer) => {
       to: proxyPasarAddr,
       value: 0,
       data: initPasarData,
+      gasPrice,
     };
 
     const { status: initPasarStatus } = await sendTxWaitForReceipt(initPasarTx, acc);
@@ -133,7 +139,7 @@ const testDeploy = async (deployer) => {
     expect(tokenAddrPasar, "Proxied Pasar initialized with token address").to.equal(proxyStickerAddr);
     console.log(`Proxied Pasar contract initialized successfully with token address ${proxyStickerAddr}`);
 
-    return { stickerAddr, pasarAddr, proxyStickerAddr, proxyPasarAddr };
+    return { stickerABI, pasarABI, stickerAddr, pasarAddr, proxyStickerAddr, proxyPasarAddr };
   } catch (err) {
     console.error(String(err));
     return;
@@ -146,8 +152,8 @@ module.exports = {
 
 if (require.main == module) {
   (async () => {
-    const { rpcUrl, deployerPK } = await getParams();
+    const { rpcUrl, gasPrice, deployerPK } = await getParams();
     await getWeb3(rpcUrl);
-    await testDeploy(deployerPK);
+    await testDeploy(deployerPK, gasPrice);
   })();
 }

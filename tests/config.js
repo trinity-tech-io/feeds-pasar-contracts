@@ -1,11 +1,34 @@
 module.exports = {
   rpcUrl: "",
+  
+  // leave empty to get gasPrice automatically
   gasPrice: "",
+
+  // only used in the Deploy tests
   deployerPK: "",
+  
+  // only used in the Sticker and Pasar tests 
+  creatorPK: "",
+  
+  // only used in the Sticker and Pasar tests 
   sellerPK: "",
+  
+  // only used in the Pasar tests
   buyerPK: "",
+  
+  // only used in the Pasar tests
+  bidderPK: "",
+  
+  // only used if the Deploy tests are not run
   stickerAddr: "",
+
+  // only used if the Deploy tests are not run
   pasarAddr: "",
+
+  // only used if the Deploy tests are not run
+  tokenId: "",
+
+  // should not be changed unless the contract interface is modified
   stickerABI: [
     {
       "anonymous": false,
@@ -966,6 +989,8 @@ module.exports = {
       "type": "function"
     }
   ],
+
+  // should not be changed unless the contract interface is modified
   pasarABI: [
     {
       "anonymous": false,

@@ -13,10 +13,13 @@ const getParams = async () => {
       .option("--rpcUrl <url>", "Ethereum RPC Url", config.rpcUrl)
       .option("--gasPrice <price>", "Manual gas price", config.gasPrice)
       .option("--deployerPK <key>", "Private key for test contract deployer account", config.deployerPK)
+      .option("--creatorPK <key>", "Private key for test token creator account", config.creatorPK)
       .option("--sellerPK <key>", "Private key for Pasar test seller account", config.sellerPK)
       .option("--buyerPK <key>", "Private key for Pasar test buyer account", config.buyerPK)
+      .option("--bidderPK <key>", "Private key for Pasar test bidder account", config.bidderPK)
       .option("--stickerAddr <address>", "Sticker NFT contract address", config.stickerAddr)
-      .option("--pasarAddr <address>", "Pasar marketplace contract address", config.pasarAddr);
+      .option("--pasarAddr <address>", "Pasar marketplace contract address", config.pasarAddr)
+      .option("--tokenId <id>", "Test sticker ID", config.tokenId);
     program.parse();
     const options = program.opts();
     options.stickerABI = config.stickerABI;
