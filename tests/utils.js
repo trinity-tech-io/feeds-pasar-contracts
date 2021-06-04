@@ -108,11 +108,11 @@ const sendTxWaitForReceipt = async (tx, acc) => {
     if (!web3) {
       console.error("Web3 not initialized");
     }
-    if (!tx.gas) {
-      tx.gas = Math.round(parseInt(await web3.eth.estimateGas(tx)) * 1.2);
-    }
     if (!tx.gasPrice) {
       tx.gasPrice = await web3.eth.getGasPrice();
+    }
+    if (!tx.gas) {
+      tx.gas = Math.round(parseInt(await web3.eth.estimateGas(tx)) * 1.2);
     }
     const signedTx = await acc.signTransaction(tx);
     const receipt = await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
