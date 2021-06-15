@@ -5,6 +5,10 @@ const fs = require("fs");
 const config = require("./config");
 let web3;
 
+const sleepMs = (ms) => {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+};
+
 const getParams = async () => {
   try {
     const program = new Command();
@@ -124,6 +128,7 @@ const sendTxWaitForReceipt = async (tx, acc) => {
 };
 
 module.exports = {
+  sleepMs,
   getParams,
   loadFile,
   getWeb3,

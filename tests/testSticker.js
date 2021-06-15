@@ -7,7 +7,7 @@ const testSticker = async (stickerABI, stickerAddr, creator, seller, tokenId, ga
     const web3 = await getWeb3();
     const stickerContract = new web3.eth.Contract(stickerABI, stickerAddr);
 
-    // Prepare seller account
+    // Prepare accounts
     const accCreator = await getAccount(creator);
     const accSeller = await getAccount(seller);
     console.log("Creator and seller accounts generated");
