@@ -18,23 +18,30 @@ const testPasar = async (pasarABI, pasarAddr, stickerABI, creator, seller, buyer
     console.log("Creator, seller, buyer and bidder accounts generated");
 
     // Token test parameters
+    const gasBuffer = BigInt("100000000000000000");
     const saleAmount = "1";
     const salePrice = "600000000000000000";
     const auctionAmount = "3";
     const auctionPrice = "1500000000000000000";
     const bid1Price = "1500000000000000000";
     const bid2Price = "1700000000000000000";
+    const orderAmount = "7";
+    const orderPrice1 = "800000000000000000";
+    const orderPrice2 = "1300000000000000000";
 
     // Check pre-conditions
     const sellerTokenBalance = BigInt(await stickerContract.methods.balanceOf(accSeller.address, tokenId).call());
     assert(
-      sellerTokenBalance >= BigInt(saleAmount) + BigInt(auctionAmount),
+      sellerTokenBalance >= BigInt(saleAmount) + BigInt(auctionAmount) + BigInt(orderAmount),
       `Seller not enough token balance of id ${tokenId} before test`
     );
     const buyerEthBalance = BigInt(await web3.eth.getBalance(accBuyer.address));
-    expect(buyerEthBalance >= BigInt(salePrice) + BigInt(bid1Price), "Buyer not enough ETH balance before test");
+    expect(
+      buyerEthBalance >= BigInt(salePrice) + BigInt(bid1Price) + gasBuffer,
+      "Buyer not enough ETH balance before test"
+    );
     const bidderEthBalance = BigInt(await web3.eth.getBalance(accBidder.address));
-    expect(bidderEthBalance >= BigInt(bid2Price), "Bidder not enough ETH balance before test");
+    expect(bidderEthBalance >= BigInt(bid2Price) + gasBuffer, "Bidder not enough ETH balance before test");
     console.log("Pre-conditions checked, all accounts have enough balances");
 
     // Seller approve pasar
@@ -277,6 +284,82 @@ const testPasar = async (pasarABI, pasarAddr, stickerABI, creator, seller, buyer
       "Bidder token balance changed by winning auction token"
     ).to.equal(BigInt(auctionAmount));
     console.log(`${accBidder.address} successfully won token from auction with order id ${auctionOrderId}`);
+
+    // Seller place test order to test change price and cancel functionalities
+    const sellerTokenBalanceBeforeOrder = BigInt(
+      await stickerContract.methods.balanceOf(accSeller.address, tokenId).call()
+    );
+    const orderData = pasarContract.methods.createOrderForSale(tokenId, orderAmount, orderPrice1).encodeABI();
+    const orderTx = {
+      from: accSeller.address,
+      to: pasarAddr,
+      value: 0,
+      data: orderData,
+      gasPrice,
+    };
+
+    const { status: orderStatus } = await sendTxWaitForReceipt(orderTx, accSeller);
+    const sellerTokenBalanceAfterOrder = BigInt(
+      await stickerContract.methods.balanceOf(accSeller.address, tokenId).call()
+    );
+    expect(orderStatus, "Test order transaction status").to.equal(true);
+    expect(
+      sellerTokenBalanceBeforeOrder - sellerTokenBalanceAfterOrder,
+      "Seller token balance changed placing test order"
+    ).to.equal(BigInt(orderAmount));
+
+    const openOrderCountAfterOrder = BigInt(await pasarContract.methods.getOpenOrderCount().call());
+    const lastOpenOrderAfterOrder = await pasarContract.methods
+      .getOpenOrderByIndex(String(openOrderCountAfterOrder - BigInt(1)))
+      .call();
+    const testOrderId = String(lastOpenOrderAfterOrder[0]);
+    console.log(`${accSeller.address} successfully placed token order for test with order id ${testOrderId}`);
+
+    // Seller change order price
+    const testOrderBeforeChange = await pasarContract.methods.getOrderById(testOrderId).call();
+    const orderPriceBeforeChange = BigInt(testOrderBeforeChange[5]);
+    expect(orderPriceBeforeChange, "Test order price before change").to.equal(BigInt(orderPrice1));
+
+    const changeData = pasarContract.methods.changeOrderPrice(testOrderId, orderPrice2).encodeABI();
+    const changeTx = {
+      from: accSeller.address,
+      to: pasarAddr,
+      value: 0,
+      data: changeData,
+      gasPrice,
+    };
+    const { status: changeStatus } = await sendTxWaitForReceipt(changeTx, accSeller);
+    expect(changeStatus, "Test change price transaction status").to.equal(true);
+    const testOrderAfterChange = await pasarContract.methods.getOrderById(testOrderId).call();
+    const orderPriceAfterChange = BigInt(testOrderAfterChange[5]);
+    expect(orderPriceAfterChange, "Test order price before change").to.equal(BigInt(orderPrice2));
+    console.log(`${accSeller.address} successfully changed order price with order id ${testOrderId}`);
+
+    // Seller cancel order
+    const sellerTokenBalanceBeforeCancel = BigInt(
+      await stickerContract.methods.balanceOf(accSeller.address, tokenId).call()
+    );
+    const cancelData = pasarContract.methods.cancelOrder(testOrderId).encodeABI();
+    const cancelTx = {
+      from: accSeller.address,
+      to: pasarAddr,
+      value: 0,
+      data: cancelData,
+      gasPrice,
+    };
+    const { status: cancelStatus } = await sendTxWaitForReceipt(cancelTx, accSeller);
+    const sellerTokenBalanceAfterCancel = BigInt(
+      await stickerContract.methods.balanceOf(accSeller.address, tokenId).call()
+    );
+    expect(cancelStatus, "Test change price transaction status").to.equal(true);
+    expect(
+      sellerTokenBalanceAfterCancel - sellerTokenBalanceBeforeCancel,
+      "Seller token balance changed canceling test order"
+    ).to.equal(BigInt(orderAmount));
+    const testOrderAfterCancel = await pasarContract.methods.getOrderById(testOrderId).call();
+    const orderStateAfterCancel = BigInt(testOrderAfterCancel[2]);
+    expect(orderStateAfterCancel, "Order state after getting canceled").to.equal(BigInt(3));
+    console.log(`${accSeller.address} successfully canceled order with order id ${testOrderId}`);
 
     return true;
   } catch (err) {
