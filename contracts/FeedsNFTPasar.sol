@@ -178,6 +178,8 @@ interface IPasarInfo {
         uint256 filled;
         address royaltyOwner;
         uint256 royaltyFee;
+        uint256 createTime;
+        uint256 updateTime;
     }
 
     struct SellerInfo {
@@ -451,6 +453,8 @@ contract FeedsNFTPasar is IERC165, IERC1155TokenReceiver, IPasarOrder, IPasarInf
         newOrder.amount = _amount;
         newOrder.price = _price;
         newOrder.sellerAddr = msg.sender;
+        newOrder.createTime = block.timestamp;
+        newOrder.updateTime = block.timestamp;
         orders.push(newOrder);
 
         openOrderToIndex[newOrder.orderId] = openOrders.length;
@@ -482,6 +486,8 @@ contract FeedsNFTPasar is IERC165, IERC1155TokenReceiver, IPasarOrder, IPasarInf
         newOrder.price = _minPrice;
         newOrder.endTime = _endTime;
         newOrder.sellerAddr = msg.sender;
+        newOrder.createTime = block.timestamp;
+        newOrder.updateTime = block.timestamp;
         orders.push(newOrder);
 
         openOrderToIndex[newOrder.orderId] = openOrders.length;
@@ -532,6 +538,7 @@ contract FeedsNFTPasar is IERC165, IERC1155TokenReceiver, IPasarOrder, IPasarInf
         orders[_orderId].lastBidder = msg.sender;
         orders[_orderId].lastBid = msg.value;
         orders[_orderId].bids = orders[_orderId].bids.add(1);
+        orders[_orderId].updateTime = block.timestamp;
         emit OrderBid(orders[_orderId].sellerAddr, msg.sender, _orderId, msg.value);
     }
 
@@ -584,6 +591,7 @@ contract FeedsNFTPasar is IERC165, IERC1155TokenReceiver, IPasarOrder, IPasarInf
 
         uint256 oldPrice = orders[_orderId].price;
         orders[_orderId].price = _price;
+        orders[_orderId].updateTime = block.timestamp;
 
         emit OrderPriceChanged(msg.sender, _orderId, oldPrice, _price);
     }
@@ -602,6 +610,7 @@ contract FeedsNFTPasar is IERC165, IERC1155TokenReceiver, IPasarOrder, IPasarInf
 
     function _cancelOrder(uint256 _id) internal {
         orders[_id].orderState = 3;
+        orders[_id].updateTime = block.timestamp;
 
         if (openOrderToIndex[_id] != openOrders.length.sub(1)) {
             uint256 index = openOrderToIndex[_id];
@@ -636,6 +645,7 @@ contract FeedsNFTPasar is IERC165, IERC1155TokenReceiver, IPasarOrder, IPasarInf
         orders[_id].filled = _value;
         orders[_id].royaltyOwner = token.tokenRoyaltyOwner(orders[_id].tokenId);
         orders[_id].royaltyFee = _value.mul(token.tokenRoyaltyFee(orders[_id].tokenId)).div(RATE_BASE);
+        orders[_id].updateTime = block.timestamp;
 
         if (openOrderToIndex[_id] != openOrders.length.sub(1)) {
             uint256 index = openOrderToIndex[_id];
