@@ -189,6 +189,8 @@ interface IPasarInfo {
         uint256 openCount;
         uint256 earned;
         uint256 royalty;
+        uint256 joinTime;
+        uint256 lastActionTime;
     }
 
     struct BuyerInfo {
@@ -198,6 +200,8 @@ interface IPasarInfo {
         uint256 filledCount;
         uint256 paid;
         uint256 royalty;
+        uint256 joinTime;
+        uint256 lastActionTime;
     }
 
     function getTokenAddress() external view returns (address);
@@ -502,8 +506,10 @@ contract FeedsNFTPasar is IERC165, IERC1155TokenReceiver, IPasarOrder, IPasarInf
         if (addrToSeller[_seller].sellerAddr == address(0x0)) {
             addrToSeller[_seller].index = sellers.length;
             addrToSeller[_seller].sellerAddr = _seller;
+            addrToSeller[_seller].joinTime = block.timestamp;
             sellers.push(_seller);
         }
+        addrToSeller[_seller].lastActionTime = block.timestamp;
 
         sellerOpenToIndex[_seller][_id] = sellerOpenOrders[_seller].length;
         sellerOrders[_seller].push(_id);
@@ -546,8 +552,10 @@ contract FeedsNFTPasar is IERC165, IERC1155TokenReceiver, IPasarOrder, IPasarInf
         if (addrToBuyer[_buyer].buyerAddr == address(0x0)) {
             addrToBuyer[_buyer].index = buyers.length;
             addrToBuyer[_buyer].buyerAddr = _buyer;
+            addrToBuyer[_buyer].joinTime = block.timestamp;
             buyers.push(_buyer);
         }
+        addrToBuyer[_buyer].lastActionTime = block.timestamp;
 
         if (!buyerOrderParticipated[_buyer][_id]) {
             buyerOrderParticipated[_buyer][_id] = true;
@@ -569,6 +577,7 @@ contract FeedsNFTPasar is IERC165, IERC1155TokenReceiver, IPasarOrder, IPasarInf
         }
 
         _cancelOrder(_orderId);
+        addrToSeller[msg.sender].lastActionTime = block.timestamp;
     }
 
     function settleAuctionOrder(uint256 _orderId) external override inited reentrancyGuard {
@@ -592,6 +601,8 @@ contract FeedsNFTPasar is IERC165, IERC1155TokenReceiver, IPasarOrder, IPasarInf
         uint256 oldPrice = orders[_orderId].price;
         orders[_orderId].price = _price;
         orders[_orderId].updateTime = block.timestamp;
+
+        addrToSeller[msg.sender].lastActionTime = block.timestamp;
 
         emit OrderPriceChanged(msg.sender, _orderId, oldPrice, _price);
     }
