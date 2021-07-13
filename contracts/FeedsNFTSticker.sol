@@ -170,6 +170,8 @@ interface ITokenInfo {
         string tokenUri;
         address royaltyOwner;
         uint256 royaltyFee;
+        uint256 createTime;
+        uint256 updateTime;
     }
 
     function tokenInfo(uint256 _id) external view returns (TokenInfo memory);
@@ -390,6 +392,7 @@ contract FeedsNFTSticker is
 
         balances[_id][_from] = balances[_id][_from].sub(_value);
         balances[_id][_to] = _value.add(balances[_id][_to]);
+        tokenIdToToken[_id].updateTime = block.timestamp;
 
         if (balances[_id][_from] <= 0 && _value > 0) {
             _removeTokenFromOwner(_id, _from);
@@ -428,6 +431,7 @@ contract FeedsNFTSticker is
 
             balances[id][_from] = balances[id][_from].sub(value);
             balances[id][_to] = value.add(balances[id][_to]);
+            tokenIdToToken[id].updateTime = block.timestamp;
 
             if (balances[id][_from] <= 0 && value > 0) {
                 _removeTokenFromOwner(id, _from);
@@ -626,12 +630,14 @@ contract FeedsNFTSticker is
             tokenIdToToken[_id].tokenIndex = tokenIds.length.sub(1);
             tokenIdToToken[_id].royaltyOwner = msg.sender;
             emit RoyaltyOwner(msg.sender, _id);
+            tokenIdToToken[_id].createTime = block.timestamp;
         }
 
         tokenIdToToken[_id].tokenSupply = _tokenSupply;
         tokenIdToToken[_id].tokenUri = _uri;
         tokenIdToToken[_id].royaltyFee = _royaltyFee;
         emit RoyaltyFee(_royaltyFee, _id);
+        tokenIdToToken[_id].updateTime = block.timestamp;
 
         _addTokenToOwner(_id, msg.sender);
         balances[_id][msg.sender] = _tokenSupply;
@@ -668,6 +674,7 @@ contract FeedsNFTSticker is
         }
 
         tokenIdToToken[_id].tokenSupply = tokenIdToToken[_id].tokenSupply.sub(_value);
+        tokenIdToToken[_id].updateTime = block.timestamp;
     }
 
     function tokenInfo(uint256 _id) external view override returns (TokenInfo memory) {
