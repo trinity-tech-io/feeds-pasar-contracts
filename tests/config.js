@@ -736,6 +736,16 @@ module.exports = {
               "internalType": "uint256",
               "name": "royaltyFee",
               "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "createTime",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "updateTime",
+              "type": "uint256"
             }
           ],
           "internalType": "struct ITokenInfo.TokenInfo",
@@ -786,6 +796,16 @@ module.exports = {
             {
               "internalType": "uint256",
               "name": "royaltyFee",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "createTime",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "updateTime",
               "type": "uint256"
             }
           ],
@@ -1419,6 +1439,16 @@ module.exports = {
               "internalType": "uint256",
               "name": "royalty",
               "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "joinTime",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "lastActionTime",
+              "type": "uint256"
             }
           ],
           "internalType": "struct IPasarInfo.BuyerInfo",
@@ -1470,6 +1500,16 @@ module.exports = {
               "internalType": "uint256",
               "name": "royalty",
               "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "joinTime",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "lastActionTime",
+              "type": "uint256"
             }
           ],
           "internalType": "struct IPasarInfo.BuyerInfo",
@@ -1520,6 +1560,16 @@ module.exports = {
             {
               "internalType": "uint256",
               "name": "royalty",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "joinTime",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "lastActionTime",
               "type": "uint256"
             }
           ],
@@ -1635,6 +1685,16 @@ module.exports = {
               "internalType": "uint256",
               "name": "royaltyFee",
               "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "createTime",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "updateTime",
+              "type": "uint256"
             }
           ],
           "internalType": "struct IPasarInfo.OrderInfo",
@@ -1735,6 +1795,16 @@ module.exports = {
             {
               "internalType": "uint256",
               "name": "royaltyFee",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "createTime",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "updateTime",
               "type": "uint256"
             }
           ],
@@ -1837,6 +1907,16 @@ module.exports = {
               "internalType": "uint256",
               "name": "royaltyFee",
               "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "createTime",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "updateTime",
+              "type": "uint256"
             }
           ],
           "internalType": "struct IPasarInfo.OrderInfo",
@@ -1937,6 +2017,16 @@ module.exports = {
             {
               "internalType": "uint256",
               "name": "royaltyFee",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "createTime",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "updateTime",
               "type": "uint256"
             }
           ],
@@ -2047,6 +2137,16 @@ module.exports = {
               "internalType": "uint256",
               "name": "royaltyFee",
               "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "createTime",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "updateTime",
+              "type": "uint256"
             }
           ],
           "internalType": "struct IPasarInfo.OrderInfo",
@@ -2142,6 +2242,16 @@ module.exports = {
             {
               "internalType": "uint256",
               "name": "royaltyFee",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "createTime",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "updateTime",
               "type": "uint256"
             }
           ],
@@ -2252,6 +2362,16 @@ module.exports = {
               "internalType": "uint256",
               "name": "royaltyFee",
               "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "createTime",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "updateTime",
+              "type": "uint256"
             }
           ],
           "internalType": "struct IPasarInfo.OrderInfo",
@@ -2348,6 +2468,16 @@ module.exports = {
               "internalType": "uint256",
               "name": "royaltyFee",
               "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "createTime",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "updateTime",
+              "type": "uint256"
             }
           ],
           "internalType": "struct IPasarInfo.OrderInfo[]",
@@ -2412,6 +2542,16 @@ module.exports = {
               "internalType": "uint256",
               "name": "royalty",
               "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "joinTime",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "lastActionTime",
+              "type": "uint256"
             }
           ],
           "internalType": "struct IPasarInfo.SellerInfo",
@@ -2463,6 +2603,16 @@ module.exports = {
               "internalType": "uint256",
               "name": "royalty",
               "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "joinTime",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "lastActionTime",
+              "type": "uint256"
             }
           ],
           "internalType": "struct IPasarInfo.SellerInfo",
@@ -2513,6 +2663,16 @@ module.exports = {
             {
               "internalType": "uint256",
               "name": "royalty",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "joinTime",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "lastActionTime",
               "type": "uint256"
             }
           ],
@@ -2628,6 +2788,16 @@ module.exports = {
               "internalType": "uint256",
               "name": "royaltyFee",
               "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "createTime",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "updateTime",
+              "type": "uint256"
             }
           ],
           "internalType": "struct IPasarInfo.OrderInfo",
@@ -2728,6 +2898,16 @@ module.exports = {
             {
               "internalType": "uint256",
               "name": "royaltyFee",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "createTime",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "updateTime",
               "type": "uint256"
             }
           ],
@@ -2830,6 +3010,16 @@ module.exports = {
               "internalType": "uint256",
               "name": "royaltyFee",
               "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "createTime",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "updateTime",
+              "type": "uint256"
             }
           ],
           "internalType": "struct IPasarInfo.OrderInfo",
@@ -2930,6 +3120,16 @@ module.exports = {
             {
               "internalType": "uint256",
               "name": "royaltyFee",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "createTime",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "updateTime",
               "type": "uint256"
             }
           ],
