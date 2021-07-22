@@ -1,4 +1,5 @@
 module.exports = {
+  // ethereum node RPC URL
   rpcUrl: "",
   
   // leave empty to get gasPrice automatically
