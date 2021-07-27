@@ -13,8 +13,8 @@ const { deployContracts } = require("./deploy_contracts");
     await getWeb3(rpcUrl);
 
     const {
-      logicNftAddr: addr1,
-      logicPasarAddr: addr2,
+      nftAddr: addr1,
+      pasarAddr: addr2,
       proxiedNftAddr: addr3,
       proxiedPasarAddr: addr4 
     } = await deployContracts(deployPK, gasPrice);

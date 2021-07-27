@@ -46,16 +46,7 @@ const deployContracts = async (deployPK, gasPrice) => {
       gasPrice,
     };
 
-    console.log(`==>>>> address: ${ownerAccount.address}`);
-    console.log(`web3: ${web3}`);
-    console.log(`nftTx: ${nftTx}`);
-    console.log(`ownerAccount: ${ownerAccount}`);
-
-   // const { contractAddress: nftAddr, status: nftStatus } = await sendTxWaitForReceipt(nftTx, ownerAccount);
-    const { status: nftStatus } = await sendTxWaitForReceipt(nftTx, ownerAccount);
-    console.log(`nftAddr: ${nftAddr}`);
-    console.log(`nftStatus: ${nftStatus}`);
-    console.log("=====>>>>");
+    const { contractAddress: nftAddr, status: nftStatus } = await sendTxWaitForReceipt(nftTx, ownerAccount);
     expect(nftStatus, "NFT contract deploy transaction status").to.equal(true);
     expect(nftAddr, "NFT contract address").to.be.a("string").with.lengthOf("42");
     console.log(`Deployed: logic NFT contract at address ${nftAddr}`);
@@ -69,7 +60,7 @@ const deployContracts = async (deployPK, gasPrice) => {
       gasPrice,
     };
 
-    const { contractAddress: pasarAddr, status: pasarStatus } = await sendTxWaitForReceipt(pasarTx, acc);
+    const { contractAddress: pasarAddr, status: pasarStatus } = await sendTxWaitForReceipt(pasarTx, ownerAccount);
     expect(pasarStatus, "Pasar contract deploy transaction status").to.equal(true);
     expect(pasarAddr, "Pasar contract address").to.be.a("string").with.lengthOf("42");
     console.log(`Deployed: logic Pasar contract at address ${pasarAddr}`);
@@ -106,9 +97,9 @@ const deployContracts = async (deployPK, gasPrice) => {
     );
     expect(proxiedPasarStatus, "Proxy Pasar contract deploy transaction status").to.equal(true);
     expect(proxiedPasarAddr, "Proxy Pasar contract address").to.be.a("string").with.lengthOf("42");
-    console.log(`Deployed: proxied Pasar contract at address: ${proxiedNftAddr}`);
+    console.log(`Deployed: proxied Pasar contract at address: ${proxiedPasarAddr}`);
 
-    const proxiedNft = new web3.eth.Contract(stickerABI, proxiedNftAddr);
+    const proxiedNft = new web3.eth.Contract(nftABI, proxiedNftAddr);
     const proxiedPasar = new web3.eth.Contract(pasarABI, proxiedPasarAddr);
 
     // to initalize proxied NFT contract
@@ -121,23 +112,23 @@ const deployContracts = async (deployPK, gasPrice) => {
       gasPrice,
     };
 
-    const { status: initedNftStatus } = await sendTxWaitForReceipt(initedNftTx, acc);
+    const { status: initedNftStatus } = await sendTxWaitForReceipt(initedNftTx, ownerAccount);
     const initedNft = await proxiedNft.methods.initialized().call();
     expect(initedNftStatus, "Proxied Nft contract initialize transaction status").to.equal(true);
     expect(initedNft, "Proxied Nft contract initialized result").to.equal(true);
     console.log('Initialized: proxied NFT contract')
 
     // to initialize proxied Pasar contract
-    const initedPasarData = proxiedPasar.methods.initialize(proxyStickerAddr).encodeABI();
+    const initedPasarData = proxiedPasar.methods.initialize(proxiedNftAddr).encodeABI();
     const initedPasarTx = {
-      from: acc.address,
-      to: proxyPasarAddr,
+      from: ownerAccount.address,
+      to: proxiedPasarAddr,
       value: 0,
       data: initedPasarData,
       gasPrice,
     };
 
-    const { status: initedPasarStatus } = await sendTxWaitForReceipt(initedPasarTx, acc);
+    const { status: initedPasarStatus } = await sendTxWaitForReceipt(initedPasarTx, ownerAccount);
     const initedPasar = await proxiedPasar.methods.initialized().call();
     const tokenAddrPasar = await proxiedPasar.methods.getTokenAddress().call();
     expect(initedPasarStatus, "Proxied Pasar contract initialize transaction status").to.equal(true);
