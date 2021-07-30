@@ -1,6 +1,6 @@
 const expect = require("chai").expect;
 const { getParams } = require("./upgrade_params");
-const { upgrader } = require("../proxyUpgrader/upgrader");
+const { upgradeContracts  } = require("./upgrade_contracts");
 
 (async () => {
   try {
@@ -23,7 +23,7 @@ const { upgrader } = require("../proxyUpgrader/upgrader");
     console.log("");
 
     if (proxiedNftAddr && newNftAddr) {
-      const result = await upgrader(ownerPK, proxiedNftAddr, newNftAddr, gasPrice, rpcUrl);
+      const result = await upgradeContracts(ownerPK, proxiedNftAddr, newNftAddr, gasPrice, rpcUrl);
       expect(result, "Result of upgrading logic NFT contract ").to.equal(true);
       console.log("")
       console.log("Logic NFT contract successfully has been upgraded");
@@ -33,7 +33,7 @@ const { upgrader } = require("../proxyUpgrader/upgrader");
 
     if (proxiedPasarAddr && newPasarAddr) {
       console.log("=== upgrade logic Pasar contract");
-      const result = await upgrader(ownerPK, proxiedPasarAddr, newPasarAddr, gasPrice, rpcUrl);
+      const result = await upgradeContracts(ownerPK, proxiedPasarAddr, newPasarAddr, gasPrice, rpcUrl);
       expect(result, "Result of upgrading logic Pasar contract ").to.equal(true);
       console.log("Logic Pasar contract successfully has been upgraded");
     }
