@@ -6,9 +6,9 @@ const getParams = async () => {
     const program = new Command();
     program.version("1.0.0");
     program
-      .option("--rpcUrl <url>", "ETHSC rpc url", config.rpcUrl)
-      .option("--gasPrice <price>", "Manual gas price", config.gasPrice)
-      .option("--deployPK <key>", "Private key for test contract deployer account", config.deployPK)
+      .option("--rpcUrl <url>", "eth smartcontract sidechain rpc url", config.rpcUrl)
+      .option("--gasPrice <price>", "gas price", config.gasPrice)
+      .option("--deployPK <key>", "private key of account to deploy the contracts", config.deployPK)
     program.parse();
     const options = program.opts();
     return options;
