@@ -30,3 +30,10 @@ Then run the command below same as deployment
 $ node upgrade.js
 ```
 
+### Generate the ABIs for contracts
+
+Run the following command to compile the contracts and generate the ABIs:
+```shell
+$ node abigen.js
+```
+
