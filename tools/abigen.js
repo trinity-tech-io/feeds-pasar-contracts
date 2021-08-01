@@ -27,7 +27,7 @@ const writeFile = async (abi, pathName) => {
     expect(nftCode, "NFT contract bytecode").to.be.a("string");
 
     writeFile(nftABI, "../abis/FeedsNFTSticker.json");
-    console.log("Compiled: Logic contract (NFT)");
+    console.log("Compiled: Logic contract (NFT) and ABIs generated");
 
     const { abi: pasarABI, bytecode: pasarCode} = await compile(
       path.resolve(__dirname, "../contracts/FeedsNFTPasar.sol"),
@@ -38,7 +38,7 @@ const writeFile = async (abi, pathName) => {
     expect(pasarCode, "Pasar contract bytecode").to.be.a("string");
 
     writeFile(pasarABI, "../abis/FeedsNFTPasar.json");
-    console.log("Compiled: Logic contract (Pasar)");
+    console.log("Compiled: Logic contract (Pasar) and ABIs generated");
   } catch (err) {
     console.error("Contracts compiled failed");
   }
