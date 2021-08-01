@@ -487,6 +487,11 @@ interface ITokenInfo {
     function tokenInfoBatch(uint256[] calldata _ids) external view returns (TokenInfo[] memory);
 }
 
+interface IVersion {
+    function getVersion() external view returns (string memory);
+    function getMagic() external view returns (string memory);
+}
+
 /**
  * @dev Methods for compatibility purposes
  */
@@ -657,6 +662,7 @@ contract FeedsNFTSticker is
     ITokenBurnable,
     ITokenCompatibility,
     ITokenInfo,
+    IVersion,
     BaseUtils
 {
     using SafeMath for uint256;
@@ -673,8 +679,8 @@ contract FeedsNFTSticker is
 
     string internal constant name_ = "Feeds NFT Sticker";
     string internal constant symbol_ = "FSTK";
-    string internal constant version = "v0.1";
-    string internal constant magic = "20210511";
+    string internal constant version = "v0.2";
+    string internal constant magic = "20210801";
 
     /**
      * @notice Query if a contract implements an interface
@@ -1253,5 +1259,13 @@ contract FeedsNFTSticker is
      */
     function decimals() external pure override returns (uint8) {
         return uint8(0);
+    }
+
+    function getVersion() external view override returns (string memory) {
+        return version;
+    }
+
+    function getMagic() external view override returns (string memory) {
+        return magic;
     }
 }

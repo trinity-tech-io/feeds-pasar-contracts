@@ -263,6 +263,11 @@ interface IPasarInfo {
         returns (OrderInfo[] memory);
 }
 
+interface IVersion {
+    function getVersion() external view returns (string memory);
+    function getMagic() external view returns (string memory);
+}
+
 library SafeMath {
     function mul(uint256 a, uint256 b) internal pure returns (uint256 c) {
         if (a == 0) {
@@ -371,7 +376,7 @@ abstract contract BaseUtils is IFeedsContractProxiable {
     }
 }
 
-contract FeedsNFTPasar is IERC165, IERC1155TokenReceiver, IPasarOrder, IPasarInfo, BaseUtils {
+contract FeedsNFTPasar is IERC165, IERC1155TokenReceiver, IPasarOrder, IPasarInfo, IVersion, BaseUtils {
     using SafeMath for uint256;
     using AddressUtils for address;
 
@@ -396,8 +401,8 @@ contract FeedsNFTPasar is IERC165, IERC1155TokenReceiver, IPasarOrder, IPasarInf
     mapping(address => mapping(uint256 => bool)) buyerOrderParticipated;
 
     string internal constant contractName = "Feeds NFT Pasar";
-    string internal constant version = "v0.1";
-    string internal constant magic = "20210516";
+    string internal constant version = "v0.2";
+    string internal constant magic = "20210801";
 
     function supportsInterface(bytes4 _interfaceId) public pure override returns (bool) {
         return
@@ -861,5 +866,13 @@ contract FeedsNFTPasar is IERC165, IERC1155TokenReceiver, IPasarOrder, IPasarInf
         }
 
         return _orders;
+    }
+
+    function getVersion() external view override returns (string memory) {
+        return version;
+    }
+
+    function getMagic() external view override returns (string memory) {
+        return magic;
     }
 }
