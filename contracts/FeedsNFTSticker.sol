@@ -679,7 +679,7 @@ contract FeedsNFTSticker is
 
     string internal constant name_ = "Feeds NFT Sticker";
     string internal constant symbol_ = "FSTK";
-    string internal constant version = "v0.2";
+    string internal constant version = "v0.1";
     string internal constant magic = "20210801";
 
     /**

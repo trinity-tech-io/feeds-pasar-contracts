@@ -88,7 +88,7 @@ if (require.main == module) {
 
         const newVersion = await nftContract.methods.getVersion().call();
         console.log(`The new version of NFT contract is ${newVersion}`);
-        expect(newVersion, "The new version value").to.equal("v0.2")
+        expect(newVersion, "The new version value").to.equal("v0.1")
 
         const newMagic = await nftContract.methods.getMagic().call();
         console.log(`The new magic value of NFT contract is ${newMagic}`);
@@ -113,7 +113,7 @@ if (require.main == module) {
 
         const newVersion = await pasarContract.methods.getVersion().call();
         console.log(`The new version of Pasar contract is ${newVersion}`);
-        expect(newVersion, "The new version value").to.equal("v0.2")
+        expect(newVersion, "The new version value").to.equal("v0.1")
 
         const newMagic = await pasarContract.methods.getMagic().call();
         console.log(`The new magic value of Pasar contract is ${newMagic}`);
