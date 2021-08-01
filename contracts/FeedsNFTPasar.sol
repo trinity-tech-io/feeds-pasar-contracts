@@ -318,11 +318,12 @@ abstract contract BaseUtils is IFeedsContractProxiable {
     uint256 private constant GUARD_PASS = 1;
     uint256 private constant GUARD_BLOCK = 2;
 
-    address public owner;
+    address public owner = address(0x1);
     bool public initialized = false;
 
     function _initialize() internal {
         require(!initialized, "Contract already initialized");
+        require(owner == address(0x0), "Logic contract cannot be initialized");
         initialized = true;
         guard = GUARD_PASS;
         owner = msg.sender;
