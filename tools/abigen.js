@@ -2,6 +2,16 @@ const fs = require("fs");
 const path = require("path");
 const expect = require("chai").expect;
 const {compileContract: compile } = require("./utils");
+const abipath = "../abis";
+
+const mkdir = () => {
+  if(fs.existsSync(abipath))
+    return ;
+  else{
+    fs.mkdirSync(abipath);
+    return ;
+  } 
+}
 
 const writeFile = async (abi, pathName) => {
   try {
@@ -19,6 +29,7 @@ const writeFile = async (abi, pathName) => {
   try {
     console.log("==> try to compile NFT contract");
 
+    mkdir();
     const { abi: nftABI, bytecode: nftCode } = await compile(
       path.resolve(__dirname, "../contracts/FeedsNFTSticker.sol"),
       "FeedsNFTSticker"
