@@ -6,5 +6,14 @@ module.exports = {
   gasPrice: "",
 
   // owner to deploy and upgrade contract 
-  deployPK: ""
+  deployPK: "",
+
+  // whether to deploy NFT logic contract or not
+  withNFT: true,
+  // whether to deploy Pasar logic contract or not
+
+  withPasar: true,
+
+  // whether to deploy Proxy contracts or not
+  withProxy: true,
 };
