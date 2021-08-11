@@ -1,6 +1,6 @@
 module.exports = {
   // ethereum node RPC URL
-  rpcUrl: "",
+  rpcUrl: "https://api.elastos.io/eth",
   
   // leave empty to get gasPrice automatically
   gasPrice: "",
@@ -16,4 +16,7 @@ module.exports = {
 
   // whether to deploy Proxy contracts or not
   withProxy: true,
+
+  // nft proxy contract address
+  nftAddr: "",
 };
