@@ -63,7 +63,7 @@ const deployPasar = async(web3, account, gasPrice) => {
   }
 }
 
-const deployProxy = async (web3, account, gasPrice, logicABI, codeAddr) => {
+const deployNFTProxy = async (web3, account, gasPrice, logicABI, codeAddr) => {
   try {
     const { abi, bytecode } = await compileContract(
       path.resolve(__dirname, "../contracts/FeedsContractProxy.sol"),
@@ -108,19 +108,66 @@ const deployProxy = async (web3, account, gasPrice, logicABI, codeAddr) => {
   }
 }
 
+const deployPasarProxy = async (web3, account, gasPrice, logicABI, codeAddr, parameterAddr) => {
+  try {
+    const { abi, bytecode } = await compileContract(
+      path.resolve(__dirname, "../contracts/FeedsContractProxy.sol"),
+      "FeedsContractProxy"
+    );
+    expect(abi, "Proxy contract ABI").to.be.an("array");
+    expect(bytecode, "Proxy contract bytecode").to.be.a("string");
+
+    const contract = new web3.eth.Contract(abi);
+    let data = contract.deploy({ data: bytecode, arguments: [codeAddr] }).encodeABI();
+    let tx = {
+      from: account.address,
+      value: 0,
+      data: data,
+      gasPrice,
+    };
+
+    const { contractAddress, status} = await sendTxWaitForReceipt(tx, account);
+    expect(status, "Proxy contract deploy transaction status").to.equal(true);
+    expect(contractAddress, "Proxy contract address").to.be.a("string").with.lengthOf("42");
+
+    const proxyContract = new web3.eth.Contract(logicABI, contractAddress);
+
+    data = proxyContract.methods.initialize(parameterAddr).encodeABI();
+    tx = {
+      from: account.address,
+      to: contractAddress,
+      value: 0,
+      data: data,
+      gasPrice,
+    };
+
+    const {status: status2} = await sendTxWaitForReceipt(tx, account);
+    const inited = await proxyContract.methods.initialized().call();
+    expect(status2, "Proxied contract initialize transaction status").to.equal(true);
+    expect(inited, "Proxied contract initialized result").to.equal(true);
+
+    return contractAddress;
+  } catch (err) {
+    console.log(String(err));
+    return;
+  }
+}
+
 module.exports = {
   deployNFT,
   deployPasar,
-  deployProxy
+  deployNFTProxy,
+  deployPasarProxy
 };
 
 if (require.main == module) {
   (async () => {
     try {
-      const { rpcUrl, gasPrice, deployPK, withNFT, withPasar, withProxy } = await getParams();
+      const { rpcUrl, gasPrice, deployPK, withNFT, withPasar, withProxy, nftAddr } = await getParams();
       console.log(`rpcUrl  : ${rpcUrl}`);
       console.log(`gasPrice: ${gasPrice}`);
       console.log(`deployPK: ${deployPK}`);
+      console.log(`NFT contract addr: ${nftAddr}`);
 
       console.log("Deploy contracts:")
       if (withNFT)
@@ -133,22 +180,33 @@ if (require.main == module) {
       const web3 = await getWeb3(rpcUrl);
       const account = await getAccount(deployPK);
 
+      let proxyNftAddr;
+
      if (withNFT) {
         const { abi: nftABI, contractAddress: nftAddr } = await deployNFT(web3, account, gasPrice);
         console.log(`NFT contract deployed at ${nftAddr}`);
 
         if (withProxy) {
-          const proxyNftAddr = await deployProxy(web3, account, gasPrice, nftABI, nftAddr);
+          proxyNftAddr = await deployNFTProxy(web3, account, gasPrice, nftABI, nftAddr);
           console.log(`NFT proxy contract deployed at ${proxyNftAddr}`);
         }
+      } else {
+        console.log("ddddddd");
+        proxyNftAddr = nftAddr;
       }
 
       if (withPasar) {
+        if (!proxyNftAddr) {
+          console.error("Error: need nft proxy address.");
+          return;
+        }
+
         const { abi: pasarABI, contractAddress: pasarAddr } = await deployPasar(web3, account, gasPrice);
         console.log(`Pasar contract deployed at ${pasarAddr}`);
+        console.log(`proxyNftAddr: ${proxyNftAddr}`);
 
         if (withProxy) {
-          const proxyPasarAddr = await deployProxy(web3, account, gasPrice, pasarABI, pasarAddr);
+          const proxyPasarAddr = await deployPasarProxy(web3, account, gasPrice, pasarABI, pasarAddr, proxyNftAddr);
           console.log(`Pasar proxy contract deployed at ${proxyPasarAddr}`);
         }
       }
