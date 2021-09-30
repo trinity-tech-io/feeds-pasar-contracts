@@ -420,12 +420,14 @@ interface ITokenMintable {
      * @param _tokenSupply Number of tokens which represents number of copies of the sticker art image
      * @param _uri URI to the metadata description file for the sticker art image
      * @param _royaltyFee The royalty fee rate in terms of parts per million when trading the token
+     * @param _didUri DID URI of the token minter
      */
     function mint(
         uint256 _id,
         uint256 _tokenSupply,
         string calldata _uri,
-        uint256 _royaltyFee
+        uint256 _royaltyFee,
+        string calldata _didUri
     ) external;
 }
 
@@ -463,7 +465,7 @@ interface ITokenInfo {
      */
     struct TokenInfo {
         uint256 tokenId; // The token identifier ie. hash value of the associated sticker art image
-        uint256 tokenIndex; // The enumerable index of the token type 
+        uint256 tokenIndex; // The enumerable index of the token type
         uint256 tokenSupply; // The number of tokens in the token type
         string tokenUri; // The URI for the metadata description file
         address royaltyOwner; // The royalty owner of the token
@@ -489,6 +491,7 @@ interface ITokenInfo {
 
 interface IVersion {
     function getVersion() external view returns (string memory);
+
     function getMagic() external view returns (string memory);
 }
 
@@ -496,16 +499,47 @@ interface IVersion {
  * @dev Methods for compatibility purposes
  */
 interface ITokenCompatibility {
-    /** 
+    /**
      * @dev Always returns zero for sticker art tokens
      * @return uint8(0)
      */
     function decimals() external view returns (uint8);
 }
 
- /**
-  * @dev Wrappers over Solidity's arithmetic operations to prevent overflow and underflow.
-*/
+/**
+ * @dev Custom interface for extra token information added in token upgrades
+ */
+interface ITokenUpgraded {
+    /**
+     * @dev MUST emit when the DID URI is updated for a token ID.
+     */
+    event DIDURI(string _value, uint256 indexed _id, address indexed _minter);
+
+    /**
+     * @dev Data structure that stores upgraded token extra information
+     */
+    struct TokenExtraInfo {
+        string didUri; // The DID URI of the token minter
+    }
+
+    /**
+     * @notice Get upgraded token extra information for a given token
+     * @param _id The token identifier
+     * @return The upgraded token extra information
+     */
+    function tokenExtraInfo(uint256 _id) external view returns (TokenExtraInfo memory);
+
+    /**
+     * @notice Get upgraded token extra information for multiple tokens
+     * @param _ids The token identifiers
+     * @return The upgraded token extra information array
+     */
+    function tokenExtraInfoBatch(uint256[] calldata _ids) external view returns (TokenExtraInfo[] memory);
+}
+
+/**
+ * @dev Wrappers over Solidity's arithmetic operations to prevent overflow and underflow.
+ */
 library SafeMath {
     function mul(uint256 a, uint256 b) internal pure returns (uint256 c) {
         if (a == 0) {
@@ -534,8 +568,8 @@ library SafeMath {
 }
 
 /**
-  * @dev Methods related to the address type
-*/
+ * @dev Methods related to the address type
+ */
 library AddressUtils {
     /**
      * @notice Check if an address is a contract
@@ -553,9 +587,9 @@ library AddressUtils {
     }
 }
 
-/** 
+/**
  * @dev Base contract for some basic common functionalities
-*/
+ */
 abstract contract BaseUtils is IFeedsContractProxiable {
     /**
      * @dev Constants for the interface identifiers, as specified in ERC-165
@@ -663,10 +697,16 @@ contract FeedsNFTSticker is
     ITokenCompatibility,
     ITokenInfo,
     IVersion,
+    ITokenUpgraded,
     BaseUtils
 {
     using SafeMath for uint256;
     using AddressUtils for address;
+
+    string internal constant name_ = "Feeds NFT Sticker";
+    string internal constant symbol_ = "FSTK";
+    string internal constant version = "v0.2";
+    string internal constant magic = "20210930";
 
     mapping(uint256 => mapping(address => uint256)) internal balances;
     mapping(address => mapping(address => bool)) internal operatorApproval;
@@ -677,10 +717,7 @@ contract FeedsNFTSticker is
     mapping(address => uint256[]) internal ownerToTokenIds;
     mapping(uint256 => mapping(address => uint256)) internal tokenIdToIndexByOwner;
 
-    string internal constant name_ = "Feeds NFT Sticker";
-    string internal constant symbol_ = "FSTK";
-    string internal constant version = "v0.1";
-    string internal constant magic = "20210801";
+    mapping(uint256 => TokenExtraInfo) internal tokenIdToExtraInfo;
 
     /**
      * @notice Query if a contract implements an interface
@@ -1148,12 +1185,14 @@ contract FeedsNFTSticker is
      * @param _tokenSupply Number of tokens which represents number of copies of the sticker art image
      * @param _uri URI to the metadata description file for the sticker art image
      * @param _royaltyFee The royalty fee rate in terms of parts per million when trading the token
+     * @param _didUri DID URI of the token minter
      */
     function mint(
         uint256 _id,
         uint256 _tokenSupply,
         string calldata _uri,
-        uint256 _royaltyFee
+        uint256 _royaltyFee,
+        string calldata _didUri
     ) external override inited {
         require(_id != 0, "New TokenID cannot be zero");
         require(_tokenSupply > 0, "New Token supply cannot be zero");
@@ -1185,6 +1224,12 @@ contract FeedsNFTSticker is
 
         if (bytes(_uri).length > 0) {
             emit URI(_uri, _id);
+        }
+
+        tokenIdToExtraInfo[_id].didUri = _didUri;
+
+        if (bytes(_didUri).length > 0) {
+            emit DIDURI(_didUri, _id, msg.sender);
         }
     }
 
@@ -1253,7 +1298,7 @@ contract FeedsNFTSticker is
         return _tokens;
     }
 
-    /** 
+    /**
      * @dev Always returns zero for sticker art tokens
      * @return uint8(0)
      */
@@ -1261,11 +1306,35 @@ contract FeedsNFTSticker is
         return uint8(0);
     }
 
-    function getVersion() external view override returns (string memory) {
+    function getVersion() external pure override returns (string memory) {
         return version;
     }
 
-    function getMagic() external view override returns (string memory) {
+    function getMagic() external pure override returns (string memory) {
         return magic;
+    }
+
+    /**
+     * @notice Get upgraded token extra information for a given token
+     * @param _id The token identifier
+     * @return The upgraded token extra information
+     */
+    function tokenExtraInfo(uint256 _id) external view override returns (TokenExtraInfo memory) {
+        return tokenIdToExtraInfo[_id];
+    }
+
+    /**
+     * @notice Get upgraded token extra information for multiple tokens
+     * @param _ids The token identifiers
+     * @return The upgraded token extra information array
+     */
+    function tokenExtraInfoBatch(uint256[] calldata _ids) external view override returns (TokenExtraInfo[] memory) {
+        TokenExtraInfo[] memory _extras = new TokenExtraInfo[](_ids.length);
+
+        for (uint256 i = 0; i < _ids.length; ++i) {
+            _extras[i] = tokenIdToExtraInfo[_ids[i]];
+        }
+
+        return _extras;
     }
 }
