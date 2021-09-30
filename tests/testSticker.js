@@ -19,7 +19,8 @@ const testSticker = async (stickerABI, stickerAddr, creator, seller, tokenId, ga
     const supply = "123";
     const uri = "https://github.com/elastos-trinity/feeds-nft-contract#readme";
     const royalty = "30000";
-    const mintData = stickerContract.methods.mint(tokenId, supply, uri, royalty).encodeABI();
+    const didUri = "https://github.com/";
+    const mintData = stickerContract.methods.mint(tokenId, supply, uri, royalty, didUri).encodeABI();
     const mintTx = {
       from: accCreator.address,
       to: stickerAddr,

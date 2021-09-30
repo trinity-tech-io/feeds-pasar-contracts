@@ -28,6 +28,7 @@ const testPasar = async (pasarABI, pasarAddr, stickerABI, creator, seller, buyer
     const orderAmount = "7";
     const orderPrice1 = "800000000000000000";
     const orderPrice2 = "1300000000000000000";
+    const didUri = "https://github.com/";
 
     // Check pre-conditions
     const sellerTokenBalance = BigInt(await stickerContract.methods.balanceOf(accSeller.address, tokenId).call());
@@ -64,7 +65,7 @@ const testPasar = async (pasarABI, pasarAddr, stickerABI, creator, seller, buyer
     const sellerTokenBalanceBeforeSale = BigInt(
       await stickerContract.methods.balanceOf(accSeller.address, tokenId).call()
     );
-    const saleData = pasarContract.methods.createOrderForSale(tokenId, saleAmount, salePrice).encodeABI();
+    const saleData = pasarContract.methods.createOrderForSale(tokenId, saleAmount, salePrice, didUri).encodeABI();
     const saleTx = {
       from: accSeller.address,
       to: pasarAddr,
@@ -97,7 +98,7 @@ const testPasar = async (pasarABI, pasarAddr, stickerABI, creator, seller, buyer
     const buyerTokenBalanceBeforePurchase = BigInt(
       await stickerContract.methods.balanceOf(accBuyer.address, tokenId).call()
     );
-    const purchaseData = pasarContract.methods.buyOrder(saleOrderId).encodeABI();
+    const purchaseData = pasarContract.methods.buyOrder(saleOrderId, didUri).encodeABI();
     const purchaseTx = {
       from: accBuyer.address,
       to: pasarAddr,
@@ -151,7 +152,7 @@ const testPasar = async (pasarABI, pasarAddr, stickerABI, creator, seller, buyer
       await stickerContract.methods.balanceOf(accSeller.address, tokenId).call()
     );
     const auctionData = pasarContract.methods
-      .createOrderForAuction(tokenId, auctionAmount, auctionPrice, auctionEndTime)
+      .createOrderForAuction(tokenId, auctionAmount, auctionPrice, auctionEndTime, didUri)
       .encodeABI();
     const auctionTx = {
       from: accSeller.address,
@@ -180,7 +181,7 @@ const testPasar = async (pasarABI, pasarAddr, stickerABI, creator, seller, buyer
 
     // Buyer bid token
     const buyerEthBalanceBeforeBid1 = BigInt(await web3.eth.getBalance(accBuyer.address));
-    const bid1Data = pasarContract.methods.bidForOrder(auctionOrderId).encodeABI();
+    const bid1Data = pasarContract.methods.bidForOrder(auctionOrderId, didUri).encodeABI();
     const bid1Tx = {
       from: accBuyer.address,
       to: pasarAddr,
@@ -209,7 +210,7 @@ const testPasar = async (pasarABI, pasarAddr, stickerABI, creator, seller, buyer
     // Bidder bid token
     const buyerEthBalanceBeforeBid2 = BigInt(await web3.eth.getBalance(accBuyer.address));
     const bidderEthBalanceBeforeBid2 = BigInt(await web3.eth.getBalance(accBidder.address));
-    const bid2Data = pasarContract.methods.bidForOrder(auctionOrderId).encodeABI();
+    const bid2Data = pasarContract.methods.bidForOrder(auctionOrderId, didUri).encodeABI();
     const bid2Tx = {
       from: accBidder.address,
       to: pasarAddr,
@@ -289,7 +290,7 @@ const testPasar = async (pasarABI, pasarAddr, stickerABI, creator, seller, buyer
     const sellerTokenBalanceBeforeOrder = BigInt(
       await stickerContract.methods.balanceOf(accSeller.address, tokenId).call()
     );
-    const orderData = pasarContract.methods.createOrderForSale(tokenId, orderAmount, orderPrice1).encodeABI();
+    const orderData = pasarContract.methods.createOrderForSale(tokenId, orderAmount, orderPrice1, didUri).encodeABI();
     const orderTx = {
       from: accSeller.address,
       to: pasarAddr,
