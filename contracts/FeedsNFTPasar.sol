@@ -3,7 +3,24 @@
 pragma solidity =0.7.6;
 pragma abicoder v2;
 
+/**
+ * @dev ERC1155TokenReceiver interface of the ERC1155 standard as defined in the EIP.
+ * @dev The ERC-165 identifier for this interface is 0x4e2312e0
+ */
 interface IERC1155TokenReceiver {
+    /**
+     * @notice Handle the receipt of a single ERC1155 token type.
+     * @dev An ERC1155-compliant smart contract MUST call this function on the token recipient contract, at the end of a `safeTransferFrom` after the balance has been updated.
+     * This function MUST return `bytes4(keccak256("onERC1155Received(address,address,uint256,uint256,bytes)"))` (i.e. 0xf23a6e61) if it accepts the transfer.
+     * This function MUST revert if it rejects the transfer.
+     * Return of any other value than the prescribed keccak256 generated value MUST result in the transaction being reverted by the caller.
+     * @param _operator  The address which initiated the transfer (i.e. msg.sender)
+     * @param _from      The address which previously owned the token
+     * @param _id        The ID of the token being transferred
+     * @param _value     The amount of tokens being transferred
+     * @param _data      Additional data with no specified format
+     * @return           `bytes4(keccak256("onERC1155Received(address,address,uint256,uint256,bytes)"))`
+     */
     function onERC1155Received(
         address _operator,
         address _from,
@@ -12,6 +29,19 @@ interface IERC1155TokenReceiver {
         bytes calldata _data
     ) external returns (bytes4);
 
+    /**
+     * @notice Handle the receipt of multiple ERC1155 token types.
+     * @dev An ERC1155-compliant smart contract MUST call this function on the token recipient contract, at the end of a `safeBatchTransferFrom` after the balances have been updated.
+     * This function MUST return `bytes4(keccak256("onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)"))` (i.e. 0xbc197c81) if it accepts the transfer(s).
+     * This function MUST revert if it rejects the transfer(s).
+     * Return of any other value than the prescribed keccak256 generated value MUST result in the transaction being reverted by the caller.
+     * @param _operator  The address which initiated the batch transfer (i.e. msg.sender)
+     * @param _from      The address which previously owned the token
+     * @param _ids       An array containing ids of each token being transferred (order and length must match _values array)
+     * @param _values    An array containing amounts of each token being transferred (order and length must match _ids array)
+     * @param _data      Additional data with no specified format
+     * @return           `bytes4(keccak256("onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)"))`
+     */
     function onERC1155BatchReceived(
         address _operator,
         address _from,
@@ -21,17 +51,54 @@ interface IERC1155TokenReceiver {
     ) external returns (bytes4);
 }
 
+/**
+ * @dev Interface of the ERC165 standard as defined in the EIP.
+ */
 interface IERC165 {
+    /**
+     * @notice Query if a contract implements an interface
+     * @param interfaceID The interface identifier, as specified in ERC-165
+     * @dev Interface identification is specified in ERC-165. This function
+     * uses less than 30,000 gas.
+     * @return `true` if the contract implements `interfaceID` and
+     * `interfaceID` is not 0xffffffff, `false` otherwise
+     */
     function supportsInterface(bytes4 interfaceID) external view returns (bool);
 }
 
+/**
+ * @dev Interface for proxiable logic contracts.
+ * @dev The ERC-165 identifier for this interface is 0xc1fdc5a0
+ */
 interface IFeedsContractProxiable {
+    /**
+     * @dev upgrade the logic contract to one on the new code address
+     * @param _newAddress New code address of the upgraded logic contract
+     */
     function updateCodeAddress(address _newAddress) external;
 
+    /**
+     * @dev get the code address of the current logic contract
+     * @return Logic contract address
+     */
     function getCodeAddress() external view returns (address);
 }
 
+/**
+ * @dev Token interface of the ERC1155 standard as defined in the EIP.
+ * @dev With support of custom token royalty methods
+ */
 interface IERC1155WithRoyalty {
+    /**
+     * @dev Either `TransferSingle` or `TransferBatch` MUST emit when tokens are transferred, including zero value transfers as well as minting or burning (see "Safe Transfer Rules" section of the standard).
+     * The `_operator` argument MUST be the address of an account/contract that is approved to make the transfer (SHOULD be msg.sender).
+     * The `_from` argument MUST be the address of the holder whose balance is decreased.
+     * The `_to` argument MUST be the address of the recipient whose balance is increased.
+     * The `_id` argument MUST be the token type being transferred.
+     * The `_value` argument MUST be the number of tokens the holder balance is decreased by and match what the recipient balance is increased by.
+     * When minting/creating tokens, the `_from` argument MUST be set to `0x0` (i.e. zero address).
+     * When burning/destroying tokens, the `_to` argument MUST be set to `0x0` (i.e. zero address).
+     */
     event TransferSingle(
         address indexed _operator,
         address indexed _from,
@@ -40,6 +107,16 @@ interface IERC1155WithRoyalty {
         uint256 _value
     );
 
+    /**
+     * @dev Either `TransferSingle` or `TransferBatch` MUST emit when tokens are transferred, including zero value transfers as well as minting or burning (see "Safe Transfer Rules" section of the standard).
+     * The `_operator` argument MUST be the address of an account/contract that is approved to make the transfer (SHOULD be msg.sender).
+     * The `_from` argument MUST be the address of the holder whose balance is decreased.
+     * The `_to` argument MUST be the address of the recipient whose balance is increased.
+     * The `_ids` argument MUST be the list of tokens being transferred.
+     * The `_values` argument MUST be the list of number of tokens (matching the list and order of tokens specified in _ids) the holder balance is decreased by and match what the recipient balance is increased by.
+     * When minting/creating tokens, the `_from` argument MUST be set to `0x0` (i.e. zero address).
+     * When burning/destroying tokens, the `_to` argument MUST be set to `0x0` (i.e. zero address).
+     */
     event TransferBatch(
         address indexed _operator,
         address indexed _from,
@@ -48,10 +125,32 @@ interface IERC1155WithRoyalty {
         uint256[] _values
     );
 
+    /**
+     * @dev MUST emit when approval for a second party/operator address to manage all tokens for an owner address is enabled or disabled (absence of an event assumes disabled).
+     */
     event ApprovalForAll(address indexed _owner, address indexed _operator, bool _approved);
 
+    /**
+     * @dev MUST emit when the URI is updated for a token ID.
+     * URIs are defined in RFC 3986.
+     * The URI MUST point to a JSON file that conforms to the "ERC-1155 Metadata URI JSON Schema".
+     */
     event URI(string _value, uint256 indexed _id);
 
+    /**
+     * @notice Transfers `_value` amount of an `_id` from the `_from` address to the `_to` address specified (with safety call).
+     * @dev Caller must be approved to manage the tokens being transferred out of the `_from` account (see "Approval" section of the standard).
+     * MUST revert if `_to` is the zero address.
+     * MUST revert if balance of holder for token `_id` is lower than the `_value` sent.
+     * MUST revert on any other error.
+     * MUST emit the `TransferSingle` event to reflect the balance change (see "Safe Transfer Rules" section of the standard).
+     * After the above conditions are met, this function MUST check if `_to` is a smart contract (e.g. code size > 0). If so, it MUST call `onERC1155Received` on `_to` and act appropriately (see "Safe Transfer Rules" section of the standard).
+     * @param _from    Source address
+     * @param _to      Target address
+     * @param _id      ID of the token type
+     * @param _value   Transfer amount
+     * @param _data    Additional data with no specified format, MUST be sent unaltered in call to `onERC1155Received` on `_to`
+     */
     function safeTransferFrom(
         address _from,
         address _to,
@@ -60,6 +159,22 @@ interface IERC1155WithRoyalty {
         bytes calldata _data
     ) external;
 
+    /**
+     * @notice Transfers `_values` amount(s) of `_ids` from the `_from` address to the `_to` address specified (with safety call).
+     * @dev Caller must be approved to manage the tokens being transferred out of the `_from` account (see "Approval" section of the standard).
+     * MUST revert if `_to` is the zero address.
+     * MUST revert if length of `_ids` is not the same as length of `_values`.
+     * MUST revert if any of the balance(s) of the holder(s) for token(s) in `_ids` is lower than the respective amount(s) in `_values` sent to the recipient.
+     * MUST revert on any other error.
+     * MUST emit `TransferSingle` or `TransferBatch` event(s) such that all the balance changes are reflected (see "Safe Transfer Rules" section of the standard).
+     * Balance changes and events MUST follow the ordering of the arrays (_ids[0]/_values[0] before _ids[1]/_values[1], etc).
+     * After the above conditions for the transfer(s) in the batch are met, this function MUST check if `_to` is a smart contract (e.g. code size > 0). If so, it MUST call the relevant `ERC1155TokenReceiver` hook(s) on `_to` and act appropriately (see "Safe Transfer Rules" section of the standard).
+     * @param _from    Source address
+     * @param _to      Target address
+     * @param _ids     IDs of each token type (order and length must match _values array)
+     * @param _values  Transfer amounts per token type (order and length must match _ids array)
+     * @param _data    Additional data with no specified format, MUST be sent unaltered in call to the `ERC1155TokenReceiver` hook(s) on `_to`
+     */
     function safeBatchTransferFrom(
         address _from,
         address _to,
@@ -68,27 +183,77 @@ interface IERC1155WithRoyalty {
         bytes calldata _data
     ) external;
 
+    /**
+     * @notice Get the balance of an account's tokens.
+     * @param _owner  The address of the token holder
+     * @param _id     ID of the token
+     * @return        The _owner's balance of the token type requested
+     */
     function balanceOf(address _owner, uint256 _id) external view returns (uint256);
 
+    /**
+     * @notice Get the balance of multiple account/token pairs
+     * @param _owners The addresses of the token holders
+     * @param _ids    ID of the tokens
+     * @return        The _owner's balance of the token types requested (i.e. balance for each (owner, id) pair)
+     */
     function balanceOfBatch(address[] calldata _owners, uint256[] calldata _ids)
         external
         view
         returns (uint256[] memory);
 
+    /**
+     * @notice Enable or disable approval for a third party ("operator") to manage all of the caller's tokens.
+     * @dev MUST emit the ApprovalForAll event on success.
+     * @param _operator  Address to add to the set of authorized operators
+     * @param _approved  True if the operator is approved, false to revoke approval
+     */
     function setApprovalForAll(address _operator, bool _approved) external;
 
+    /**
+     * @notice Queries the approval status of an operator for a given owner.
+     * @param _owner     The owner of the tokens
+     * @param _operator  Address of authorized operator
+     * @return           True if the operator is approved, false if not
+     */
     function isApprovedForAll(address _owner, address _operator) external view returns (bool);
 
+    /**
+     * @notice Get the royalty owner address of a given token type
+     * @param _id The token identifier of a given token type
+     * @return The royalty owner address
+     */
     function tokenRoyaltyOwner(uint256 _id) external view returns (address);
 
+    /**
+     * @notice Get the royalty owner address of multiple token types
+     * @param _ids The token identifiers of the token types
+     * @return The royalty owner addresses
+     */
     function tokenRoyaltyOwnerBatch(uint256[] calldata _ids) external view returns (address[] memory);
 
+    /**
+     * @notice Get the royalty fee rate of a given token type
+     * @param _id The token identifier of a given token type
+     * @return The royalty fee rate in terms of parts per million
+     */
     function tokenRoyaltyFee(uint256 _id) external view returns (uint256);
 
+    /**
+     * @notice Get the royalty fee rate of multiple token types
+     * @param _ids The token identifiers of the token types
+     * @return The royalty fee rates in terms of parts per million
+     */
     function tokenRoyaltyFeeBatch(uint256[] calldata _ids) external view returns (uint256[] memory);
 }
 
+/**
+ * @dev Interface for trading orders in Pasar.
+ */
 interface IPasarOrder {
+    /**
+     * @dev MUST emit when the contract receives a single ERC1155 token type.
+     */
     event ERC1155Received(
         address indexed _operator,
         address indexed _from,
@@ -97,6 +262,9 @@ interface IPasarOrder {
         bytes _data
     );
 
+    /**
+     * @dev MUST emit when the contract receives multiple ERC1155 token types.
+     */
     event ERC1155BatchReceived(
         address indexed _operator,
         address indexed _from,
@@ -105,6 +273,14 @@ interface IPasarOrder {
         bytes _data
     );
 
+    /**
+     * @dev MUST emit when a new sale order is created in Pasar.
+     * The `_seller` argument MUST be the address of the seller who created the order.
+     * The `_orderId` argument MUST be the id of the order created.
+     * The `_tokenId` argument MUST be the token type placed on sale.
+     * The `_amount` argument MUST be the amount of token placed on sale.
+     * The `_price` argument MUST be the fixed price asked for the sale order.
+     */
     event OrderForSale(
         address indexed _seller,
         uint256 indexed _orderId,
@@ -113,6 +289,15 @@ interface IPasarOrder {
         uint256 _price
     );
 
+    /**
+     * @dev MUST emit when a new auction order is created in Pasar.
+     * The `_seller` argument MUST be the address of the seller who created the order.
+     * The `_orderId` argument MUST be the id of the order created.
+     * The `_tokenId` argument MUST be the token type placed on auction.
+     * The `_amount` argument MUST be the amount of token placed on auction.
+     * The `_minPrice` argument MUST be the minimum starting price for the auction bids.
+     * The `endTime` argument MUST be the time for ending the auction.
+     */
     event OrderForAuction(
         address indexed _seller,
         uint256 indexed _orderId,
@@ -122,42 +307,124 @@ interface IPasarOrder {
         uint256 _endTime
     );
 
+    /**
+     * @dev MUST emit when a bid is placed on an auction order.
+     * The `_seller` argument MUST be the address of the seller who created the order.
+     * The `_buyer` argument MUST be the address of the buyer who made the bid.
+     * The `_orderId` argument MUST be the id of the order been bid on.
+     * The `_price` argument MUST be the price of the bid.
+     */
     event OrderBid(address indexed _seller, address indexed _buyer, uint256 indexed _orderId, uint256 _price);
 
+    /**
+     * @dev MUST emit when an order is filled.
+     * The `_seller` argument MUST be the address of the seller who created the order.
+     * The `_buyer` argument MUST be the address of the buyer in the fulfilled order.
+     * The `_orderId` argument MUST be the id of the order fulfilled.
+     * The `_royaltyOwner` argument MUST be the address of the royalty owner of the token sold in the order.
+     * The `_price` argument MUST be the price of the fulfilled order.
+     * The `_royalty` argument MUST be the royalty paid for the fulfilled order.
+     */
     event OrderFilled(
         address indexed _seller,
         address indexed _buyer,
         uint256 indexed _orderId,
-        address _copyrightOwner,
+        address _royaltyOwner,
         uint256 _price,
         uint256 _royalty
     );
 
+    /**
+     * @dev MUST emit when an order is canceled.
+     * @dev Only an open sale order or an auction order with no bid yet can be canceled
+     * The `_seller` argument MUST be the address of the seller who created the order.
+     * The `_orderId` argument MUST be the id of the order canceled.
+     */
     event OrderCanceled(address indexed _seller, uint256 indexed _orderId);
 
+    /**
+     * @dev MUST emit when an order has its price changed.
+     * @dev Only an open sale order or an auction order with no bid yet can have its price changed.
+     * @dev For sale orders, the fixed price asked for the order is changed.
+     * @dev for auction orders, the minimum starting price for the bids is changed.
+     * The `_seller` argument MUST be the address of the seller who created the order.
+     * The `_orderId` argument MUST be the id of the order with the price change.
+     * The `_oldPrice` argument MUST be the original price of the order before the price change.
+     * The `_newPrice` argument MUST be the new price of the order after the price change.
+     */
     event OrderPriceChanged(address indexed _seller, uint256 indexed _orderId, uint256 _oldPrice, uint256 _newPrice);
 
+    /**
+     * @notice Create a new order for sale at a fixed price
+     * @param _tokenId The token type placed on sale
+     * @param _amount The amount of token placed on sale
+     * @param _price The fixed price asked for the sale order
+     * @param _didUri DID URI of the seller
+     */
     function createOrderForSale(
         uint256 _tokenId,
         uint256 _amount,
-        uint256 _price
+        uint256 _price,
+        string calldata _didUri
     ) external;
 
+    /**
+     * @notice Create a new order for auction
+     * @param _tokenId The token type placed on auction
+     * @param _amount The amount of token placed on auction
+     * @param _minPrice The minimum starting price for bidding on the auction
+     * @param _endTime The time for ending the auction
+     * @param _didUri DID URI of the seller
+     */
     function createOrderForAuction(
         uint256 _tokenId,
         uint256 _amount,
         uint256 _minPrice,
-        uint256 _endTime
+        uint256 _endTime,
+        string calldata _didUri
     ) external;
 
-    function buyOrder(uint256 _orderId) external payable;
+    /**
+     * @notice Buy a sale order with fixed price
+     * @dev The value of the transaction must equal to the fixed price asked for the order
+     * @param _orderId The id of the fixed price sale order
+     * @param _didUri DID URI of the buyer
+     */
+    function buyOrder(uint256 _orderId, string calldata _didUri) external payable;
 
-    function bidForOrder(uint256 _orderId) external payable;
+    /**
+     * @notice Bid on an auction order
+     * @dev The value of the transaction must be greater than or equal to the minimum starting price of the oder
+     * @dev If the order has past bid(s), the value of the transaction must be greater than the last bid
+     * @param _orderId The id of the auction order
+     * @param _didUri DID URI of the buyer
+     */
+    function bidForOrder(uint256 _orderId, string calldata _didUri) external payable;
 
+    /**
+     * @notice Cancel an order
+     * @dev Only an open sale order or an auction order with no bid yet can be canceled
+     * @dev Only an order's seller can cancel the order
+     * @param _orderId The id of the order to be canceled
+     */
     function cancelOrder(uint256 _orderId) external;
 
+    /**
+     * @notice Settle an auction
+     * @dev Only an auction order past its end time can be settled
+     * @dev Anyone can settle an auction
+     * @param _orderId The id of the order to be settled
+     */
     function settleAuctionOrder(uint256 _orderId) external;
 
+    /**
+     * @notice Change the price of an order
+     * @dev Only an open sale order or an auction order with no bid yet can have its price changed.
+     * @dev For sale orders, the fixed price asked for the order is changed.
+     * @dev for auction orders, the minimum starting price for the bids is changed.
+     * @dev Only an order's seller can change its price
+     * @param _orderId The id of the order with its price to be changed
+     */
     function changeOrderPrice(uint256 _orderId, uint256 _price) external;
 }
 
@@ -265,7 +532,44 @@ interface IPasarInfo {
 
 interface IVersion {
     function getVersion() external view returns (string memory);
+
     function getMagic() external view returns (string memory);
+}
+
+/**
+ * @dev Interface for extra Pasar information added in Pasar upgrades
+ */
+interface IPasarUpgraded {
+    /**
+     * @dev MUST emit when the DID URIs related to an order is updated.
+     */
+    event OrderDIDURI(
+        string _sellerUri,
+        string _buyerUri,
+        address indexed _seller,
+        address indexed _buyer,
+        uint256 indexed _orderId
+    );
+
+    struct OrderExtraInfo {
+        string sellerUri;
+        string buyerUri;
+        address platformAddr;
+        uint256 platformFee;
+    }
+    /**
+     * @notice Get extra order information for a given order from upgraded Pasar contract
+     * @param _orderId The order identifier
+     * @return The extra order information from upgraded Pasar contract
+     */
+    function getOrderExtraById(uint256 _orderId) external view returns (OrderExtraInfo memory);
+
+    /**
+     * @notice Get extra order information for multiple orders from upgraded Pasar contract
+     * @param _orderIds The order identifiers
+     * @return The extra order information array from upgraded Pasar contract
+     */
+    function getOrderExtraByIdBatch(uint256[] calldata _orderIds) external view returns (OrderExtraInfo[] memory);
 }
 
 library SafeMath {
@@ -306,6 +610,9 @@ library AddressUtils {
     }
 }
 
+/**
+ * @dev Base contract for some basic common functionalities
+ */
 abstract contract BaseUtils is IFeedsContractProxiable {
     bytes4 internal constant ERC1155_ACCEPTED = 0xf23a6e61;
     bytes4 internal constant ERC1155_BATCH_ACCEPTED = 0xbc197c81;
@@ -323,6 +630,9 @@ abstract contract BaseUtils is IFeedsContractProxiable {
     uint256 private constant GUARD_PASS = 1;
     uint256 private constant GUARD_BLOCK = 2;
 
+    /**
+     * @dev Proxied contracts cannot use contructor but must be intialized manually
+     */
     address public owner = address(0x1);
     bool public initialized = false;
 
@@ -343,6 +653,9 @@ abstract contract BaseUtils is IFeedsContractProxiable {
         _;
     }
 
+    /**
+     * @dev Mutex to guard against re-entrancy exploits
+     */
     modifier reentrancyGuard() {
         require(guard != GUARD_BLOCK, "Reentrancy blocked");
         guard = GUARD_BLOCK;
@@ -359,6 +672,12 @@ abstract contract BaseUtils is IFeedsContractProxiable {
         owner = _owner;
     }
 
+    /**
+     * @notice Upgrade the logic contract to one on the new code address
+     * @dev Code position in storage is
+     * keccak256("PROXIABLE") = "0xc5f16f0fcc639fa48a6947836d9850f504798523bf8c9a3a87d5876cf622bcf7"
+     * @param _newAddress New code address of the upgraded logic contract
+     */
     function updateCodeAddress(address _newAddress) external override inited onlyOwner {
         require(IERC165(_newAddress).supportsInterface(0xc1fdc5a0), "Contract address not proxiable");
 
@@ -368,6 +687,12 @@ abstract contract BaseUtils is IFeedsContractProxiable {
         }
     }
 
+    /**
+     * @notice get the code address of the current logic contract
+     * @dev Code position in storage is
+     * keccak256("PROXIABLE") = "0xc5f16f0fcc639fa48a6947836d9850f504798523bf8c9a3a87d5876cf622bcf7"
+     * @return _codeAddress Logic contract address
+     */
     function getCodeAddress() external view override returns (address _codeAddress) {
         // solium-disable-next-line security/no-inline-assembly
         assembly {
@@ -376,9 +701,24 @@ abstract contract BaseUtils is IFeedsContractProxiable {
     }
 }
 
-contract FeedsNFTPasar is IERC165, IERC1155TokenReceiver, IPasarOrder, IPasarInfo, IVersion, BaseUtils {
+/**
+ * @notice The implementation of the Pasar market contract for trading Feeds sticker art tokens
+ */
+contract FeedsNFTPasar is
+    IERC165,
+    IERC1155TokenReceiver,
+    IPasarOrder,
+    IPasarInfo,
+    IVersion,
+    IPasarUpgraded,
+    BaseUtils
+{
     using SafeMath for uint256;
     using AddressUtils for address;
+
+    string internal constant contractName = "Feeds NFT Pasar";
+    string internal constant version = "v0.1";
+    string internal constant magic = "20210801";
 
     address internal tokenAddress;
     IERC1155WithRoyalty internal token;
@@ -392,17 +732,15 @@ contract FeedsNFTPasar is IERC165, IERC1155TokenReceiver, IPasarOrder, IPasarInf
     address[] internal sellers;
     address[] internal buyers;
 
-    mapping(address => uint256[]) sellerOrders;
-    mapping(address => uint256[]) sellerOpenOrders;
-    mapping(address => mapping(uint256 => uint256)) sellerOpenToIndex;
+    mapping(address => uint256[]) internal sellerOrders;
+    mapping(address => uint256[]) internal sellerOpenOrders;
+    mapping(address => mapping(uint256 => uint256)) internal sellerOpenToIndex;
 
-    mapping(address => uint256[]) buyerOrders;
-    mapping(address => uint256[]) buyerFilledOrders;
-    mapping(address => mapping(uint256 => bool)) buyerOrderParticipated;
+    mapping(address => uint256[]) internal buyerOrders;
+    mapping(address => uint256[]) internal buyerFilledOrders;
+    mapping(address => mapping(uint256 => bool)) internal buyerOrderParticipated;
 
-    string internal constant contractName = "Feeds NFT Pasar";
-    string internal constant version = "v0.1";
-    string internal constant magic = "20210801";
+    mapping(uint256 => OrderExtraInfo) internal orderIdToExtraInfo;
 
     function supportsInterface(bytes4 _interfaceId) public pure override returns (bool) {
         return
@@ -423,6 +761,19 @@ contract FeedsNFTPasar is IERC165, IERC1155TokenReceiver, IPasarOrder, IPasarInf
         token = IERC1155WithRoyalty(_tokenAddress);
     }
 
+    /**
+     * @notice Handle the receipt of a single ERC1155 token type.
+     * @dev An ERC1155-compliant smart contract MUST call this function on the token recipient contract, at the end of a `safeTransferFrom` after the balance has been updated.
+     * This function MUST return `bytes4(keccak256("onERC1155Received(address,address,uint256,uint256,bytes)"))` (i.e. 0xf23a6e61) if it accepts the transfer.
+     * This function MUST revert if it rejects the transfer.
+     * Return of any other value than the prescribed keccak256 generated value MUST result in the transaction being reverted by the caller.
+     * @param _operator  The address which initiated the transfer (i.e. msg.sender)
+     * @param _from      The address which previously owned the token
+     * @param _id        The ID of the token being transferred
+     * @param _value     The amount of tokens being transferred
+     * @param _data      Additional data with no specified format
+     * @return           `bytes4(keccak256("onERC1155Received(address,address,uint256,uint256,bytes)"))`
+     */
     function onERC1155Received(
         address _operator,
         address _from,
@@ -434,6 +785,19 @@ contract FeedsNFTPasar is IERC165, IERC1155TokenReceiver, IPasarOrder, IPasarInf
         return ERC1155_ACCEPTED;
     }
 
+    /**
+     * @notice Handle the receipt of multiple ERC1155 token types.
+     * @dev An ERC1155-compliant smart contract MUST call this function on the token recipient contract, at the end of a `safeBatchTransferFrom` after the balances have been updated.
+     * This function MUST return `bytes4(keccak256("onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)"))` (i.e. 0xbc197c81) if it accepts the transfer(s).
+     * This function MUST revert if it rejects the transfer(s).
+     * Return of any other value than the prescribed keccak256 generated value MUST result in the transaction being reverted by the caller.
+     * @param _operator  The address which initiated the batch transfer (i.e. msg.sender)
+     * @param _from      The address which previously owned the token
+     * @param _ids       An array containing ids of each token being transferred (order and length must match _values array)
+     * @param _values    An array containing amounts of each token being transferred (order and length must match _ids array)
+     * @param _data      Additional data with no specified format
+     * @return           `bytes4(keccak256("onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)"))`
+     */
     function onERC1155BatchReceived(
         address _operator,
         address _from,
@@ -445,10 +809,18 @@ contract FeedsNFTPasar is IERC165, IERC1155TokenReceiver, IPasarOrder, IPasarInf
         return ERC1155_BATCH_ACCEPTED;
     }
 
+    /**
+     * @notice Create a new order for sale at a fixed price
+     * @param _tokenId The token type placed on sale
+     * @param _amount The amount of token placed on sale
+     * @param _price The fixed price asked for the sale order
+     * @param _didUri DID URI of the seller
+     */
     function createOrderForSale(
         uint256 _tokenId,
         uint256 _amount,
-        uint256 _price
+        uint256 _price,
+        string calldata _didUri
     ) external override inited reentrancyGuard {
         require(token.isApprovedForAll(msg.sender, address(this)), "Contract is not approved");
         require(_amount > 0 && _price > 0, "Amount and price cannot be zero");
@@ -473,13 +845,25 @@ contract FeedsNFTPasar is IERC165, IERC1155TokenReceiver, IPasarOrder, IPasarInf
         _newOrderSeller(msg.sender, newOrder.orderId);
 
         emit OrderForSale(msg.sender, newOrder.orderId, _tokenId, _amount, _price);
+
+        orderIdToExtraInfo[newOrder.orderId].sellerUri = _didUri;
+        emit OrderDIDURI(_didUri, "", msg.sender, address(0x0), newOrder.orderId);
     }
 
+    /**
+     * @notice Create a new order for auction
+     * @param _tokenId The token type placed on auction
+     * @param _amount The amount of token placed on auction
+     * @param _minPrice The minimum starting price for bidding on the auction
+     * @param _endTime The time for ending the auction
+     * @param _didUri DID URI of the seller
+     */
     function createOrderForAuction(
         uint256 _tokenId,
         uint256 _amount,
         uint256 _minPrice,
-        uint256 _endTime
+        uint256 _endTime,
+        string calldata _didUri
     ) external override inited reentrancyGuard {
         require(token.isApprovedForAll(msg.sender, address(this)), "Contract is not approved");
         require(_amount > 0 && _minPrice > 0, "Amount and price cannot be zero");
@@ -506,6 +890,9 @@ contract FeedsNFTPasar is IERC165, IERC1155TokenReceiver, IPasarOrder, IPasarInf
         _newOrderSeller(msg.sender, newOrder.orderId);
 
         emit OrderForAuction(msg.sender, newOrder.orderId, _tokenId, _amount, _minPrice, _endTime);
+
+        orderIdToExtraInfo[newOrder.orderId].sellerUri = _didUri;
+        emit OrderDIDURI(_didUri, "", msg.sender, address(0x0), newOrder.orderId);
     }
 
     function _newOrderSeller(address _seller, uint256 _id) internal {
@@ -525,15 +912,37 @@ contract FeedsNFTPasar is IERC165, IERC1155TokenReceiver, IPasarOrder, IPasarInf
         addrToSeller[_seller].openCount = sellerOpenOrders[_seller].length;
     }
 
-    function buyOrder(uint256 _orderId) external payable override inited reentrancyGuard {
+    /**
+     * @notice Buy a sale order with fixed price
+     * @dev The value of the transaction must equal to the fixed price asked for the order
+     * @param _orderId The id of the fixed price sale order
+     * @param _didUri DID URI of the buyer
+     */
+    function buyOrder(uint256 _orderId, string calldata _didUri) external payable override inited reentrancyGuard {
         require(orders[_orderId].orderType == 1 && orders[_orderId].orderState == 1, "Invalid order ID");
         require(msg.value == orders[_orderId].price, "Must pay the exact price for order");
 
         _newOrderBuyer(msg.sender, _orderId);
         _fillOrder(msg.sender, _orderId, msg.value);
+
+        orderIdToExtraInfo[_orderId].buyerUri = _didUri;
+        emit OrderDIDURI(
+            orderIdToExtraInfo[_orderId].sellerUri,
+            _didUri,
+            orders[_orderId].sellerAddr,
+            msg.sender,
+            _orderId
+        );
     }
 
-    function bidForOrder(uint256 _orderId) external payable override inited reentrancyGuard {
+    /**
+     * @notice Bid on an auction order
+     * @dev The value of the transaction must be greater than or equal to the minimum starting price of the oder
+     * @dev If the order has past bid(s), the value of the transaction must be greater than the last bid
+     * @param _orderId The id of the auction order
+     * @param _didUri DID URI of the buyer
+     */
+    function bidForOrder(uint256 _orderId, string calldata _didUri) external payable override inited reentrancyGuard {
         require(orders[_orderId].orderType == 2 && orders[_orderId].orderState == 1, "Invalid order ID");
         if (orders[_orderId].endTime < block.timestamp) {
             _settleAuction(_orderId);
@@ -552,6 +961,15 @@ contract FeedsNFTPasar is IERC165, IERC1155TokenReceiver, IPasarOrder, IPasarInf
         orders[_orderId].bids = orders[_orderId].bids.add(1);
         orders[_orderId].updateTime = block.timestamp;
         emit OrderBid(orders[_orderId].sellerAddr, msg.sender, _orderId, msg.value);
+
+        orderIdToExtraInfo[_orderId].buyerUri = _didUri;
+        emit OrderDIDURI(
+            orderIdToExtraInfo[_orderId].sellerUri,
+            _didUri,
+            orders[_orderId].sellerAddr,
+            msg.sender,
+            _orderId
+        );
     }
 
     function _newOrderBuyer(address _buyer, uint256 _id) internal {
@@ -570,6 +988,12 @@ contract FeedsNFTPasar is IERC165, IERC1155TokenReceiver, IPasarOrder, IPasarInf
         }
     }
 
+    /**
+     * @notice Cancel an order
+     * @dev Only an open sale order or an auction order with no bid yet can be canceled
+     * @dev Only an order's seller can cancel the order
+     * @param _orderId The id of the order to be canceled
+     */
     function cancelOrder(uint256 _orderId) external override inited reentrancyGuard {
         require(orders[_orderId].orderState == 1, "Invalid order state");
         require(msg.sender == orders[_orderId].sellerAddr, "Only seller can cancel own order");
@@ -586,12 +1010,26 @@ contract FeedsNFTPasar is IERC165, IERC1155TokenReceiver, IPasarOrder, IPasarInf
         addrToSeller[msg.sender].lastActionTime = block.timestamp;
     }
 
+    /**
+     * @notice Settle an auction
+     * @dev Only an auction order past its end time can be settled
+     * @dev Anyone can settle an auction
+     * @param _orderId The id of the order to be settled
+     */
     function settleAuctionOrder(uint256 _orderId) external override inited reentrancyGuard {
         require(orders[_orderId].orderType == 2 && orders[_orderId].endTime < block.timestamp, "Invalid order ID");
 
         _settleAuction(_orderId);
     }
 
+    /**
+     * @notice Change the price of an order
+     * @dev Only an open sale order or an auction order with no bid yet can have its price changed.
+     * @dev For sale orders, the fixed price asked for the order is changed.
+     * @dev for auction orders, the minimum starting price for the bids is changed.
+     * @dev Only an order's seller can change its price
+     * @param _orderId The id of the order with its price to be changed
+     */
     function changeOrderPrice(uint256 _orderId, uint256 _price) external override inited reentrancyGuard {
         require(orders[_orderId].orderState == 1, "Invalid order state");
         require(msg.sender == orders[_orderId].sellerAddr, "Only seller can change own order price");
@@ -868,11 +1306,40 @@ contract FeedsNFTPasar is IERC165, IERC1155TokenReceiver, IPasarOrder, IPasarInf
         return _orders;
     }
 
-    function getVersion() external view override returns (string memory) {
+    function getVersion() external pure override returns (string memory) {
         return version;
     }
 
-    function getMagic() external view override returns (string memory) {
+    function getMagic() external pure override returns (string memory) {
         return magic;
+    }
+
+    /**
+     * @notice Get extra order information for a given order from upgraded Pasar contract
+     * @param _orderId The order identifier
+     * @return The extra order information from upgraded Pasar contract
+     */
+    function getOrderExtraById(uint256 _orderId) external view override returns (OrderExtraInfo memory) {
+        return orderIdToExtraInfo[_orderId];
+    }
+
+    /**
+     * @notice Get extra order information for multiple orders from upgraded Pasar contract
+     * @param _orderIds The order identifiers
+     * @return The extra order information array from upgraded Pasar contract
+     */
+    function getOrderExtraByIdBatch(uint256[] calldata _orderIds)
+        external
+        view
+        override
+        returns (OrderExtraInfo[] memory)
+    {
+        OrderExtraInfo[] memory _extras = new OrderExtraInfo[](_orderIds.length);
+
+        for (uint256 i = 0; i < _orderIds.length; ++i) {
+            _extras[i] = orderIdToExtraInfo[_orderIds[i]];
+        }
+
+        return _extras;
     }
 }

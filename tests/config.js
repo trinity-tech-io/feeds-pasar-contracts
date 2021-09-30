@@ -61,6 +61,31 @@ module.exports = {
       "inputs": [
         {
           "indexed": false,
+          "internalType": "string",
+          "name": "_value",
+          "type": "string"
+        },
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "_id",
+          "type": "uint256"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "_minter",
+          "type": "address"
+        }
+      ],
+      "name": "DIDURI",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
           "internalType": "uint256",
           "name": "_fee",
           "type": "uint256"
@@ -304,6 +329,32 @@ module.exports = {
     },
     {
       "inputs": [],
+      "name": "getMagic",
+      "outputs": [
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getVersion",
+      "outputs": [
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [],
       "name": "initialize",
       "outputs": [],
       "stateMutability": "nonpayable",
@@ -367,6 +418,11 @@ module.exports = {
           "internalType": "uint256",
           "name": "_royaltyFee",
           "type": "uint256"
+        },
+        {
+          "internalType": "string",
+          "name": "_didUri",
+          "type": "string"
         }
       ],
       "name": "mint",
@@ -605,6 +661,58 @@ module.exports = {
           "internalType": "uint256[]",
           "name": "",
           "type": "uint256[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_id",
+          "type": "uint256"
+        }
+      ],
+      "name": "tokenExtraInfo",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "string",
+              "name": "didUri",
+              "type": "string"
+            }
+          ],
+          "internalType": "struct ITokenUpgraded.TokenExtraInfo",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256[]",
+          "name": "_ids",
+          "type": "uint256[]"
+        }
+      ],
+      "name": "tokenExtraInfoBatch",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "string",
+              "name": "didUri",
+              "type": "string"
+            }
+          ],
+          "internalType": "struct ITokenUpgraded.TokenExtraInfo[]",
+          "name": "",
+          "type": "tuple[]"
         }
       ],
       "stateMutability": "view",
@@ -1141,6 +1249,43 @@ module.exports = {
       "anonymous": false,
       "inputs": [
         {
+          "indexed": false,
+          "internalType": "string",
+          "name": "_sellerUri",
+          "type": "string"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "_buyerUri",
+          "type": "string"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "_seller",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "_buyer",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "_orderId",
+          "type": "uint256"
+        }
+      ],
+      "name": "OrderDIDURI",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
           "indexed": true,
           "internalType": "address",
           "name": "_seller",
@@ -1161,7 +1306,7 @@ module.exports = {
         {
           "indexed": false,
           "internalType": "address",
-          "name": "_copyrightOwner",
+          "name": "_royaltyOwner",
           "type": "address"
         },
         {
@@ -1297,6 +1442,11 @@ module.exports = {
           "internalType": "uint256",
           "name": "_orderId",
           "type": "uint256"
+        },
+        {
+          "internalType": "string",
+          "name": "_didUri",
+          "type": "string"
         }
       ],
       "name": "bidForOrder",
@@ -1310,6 +1460,11 @@ module.exports = {
           "internalType": "uint256",
           "name": "_orderId",
           "type": "uint256"
+        },
+        {
+          "internalType": "string",
+          "name": "_didUri",
+          "type": "string"
         }
       ],
       "name": "buyOrder",
@@ -1369,6 +1524,11 @@ module.exports = {
           "internalType": "uint256",
           "name": "_endTime",
           "type": "uint256"
+        },
+        {
+          "internalType": "string",
+          "name": "_didUri",
+          "type": "string"
         }
       ],
       "name": "createOrderForAuction",
@@ -1392,6 +1552,11 @@ module.exports = {
           "internalType": "uint256",
           "name": "_price",
           "type": "uint256"
+        },
+        {
+          "internalType": "string",
+          "name": "_didUri",
+          "type": "string"
         }
       ],
       "name": "createOrderForSale",
@@ -2053,6 +2218,19 @@ module.exports = {
       "type": "function"
     },
     {
+      "inputs": [],
+      "name": "getMagic",
+      "outputs": [
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
       "inputs": [
         {
           "internalType": "uint256",
@@ -2497,6 +2675,88 @@ module.exports = {
           "internalType": "uint256",
           "name": "",
           "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_orderId",
+          "type": "uint256"
+        }
+      ],
+      "name": "getOrderExtraById",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "string",
+              "name": "sellerUri",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "buyerUri",
+              "type": "string"
+            },
+            {
+              "internalType": "address",
+              "name": "platformAddr",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "platformFee",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct IPasarUpgraded.OrderExtraInfo",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256[]",
+          "name": "_orderIds",
+          "type": "uint256[]"
+        }
+      ],
+      "name": "getOrderExtraByIdBatch",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "string",
+              "name": "sellerUri",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "buyerUri",
+              "type": "string"
+            },
+            {
+              "internalType": "address",
+              "name": "platformAddr",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "platformFee",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct IPasarUpgraded.OrderExtraInfo[]",
+          "name": "",
+          "type": "tuple[]"
         }
       ],
       "stateMutability": "view",
@@ -3153,6 +3413,19 @@ module.exports = {
         }
       ],
       "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getVersion",
+      "outputs": [
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        }
+      ],
+      "stateMutability": "pure",
       "type": "function"
     },
     {
