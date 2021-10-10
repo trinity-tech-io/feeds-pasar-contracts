@@ -551,12 +551,24 @@ interface IPasarUpgraded {
         uint256 indexed _orderId
     );
 
+    /**
+     * @dev MUST emit with the platform fee information when an order is fulfilled
+     */
+    event OrderPlatformFee(
+        address _platformAddress,
+        uint256 _platformFee,
+        address indexed _seller,
+        address indexed _buyer,
+        uint256 indexed _orderId
+    );
+
     struct OrderExtraInfo {
         string sellerUri;
         string buyerUri;
         address platformAddr;
         uint256 platformFee;
     }
+
     /**
      * @notice Get extra order information for a given order from upgraded Pasar contract
      * @param _orderId The order identifier
@@ -570,6 +582,20 @@ interface IPasarUpgraded {
      * @return The extra order information array from upgraded Pasar contract
      */
     function getOrderExtraByIdBatch(uint256[] calldata _orderIds) external view returns (OrderExtraInfo[] memory);
+
+    /**
+     * @notice Set the platform fee rate charged for each trade and the platform address to receive the fees
+     * @param _platformAddress the platform address
+     * @param _platformFeeRate The platform fee rate in terms of parts per million
+     */
+    function setPlatformFee(address _platformAddress, uint256 _platformFeeRate) external;
+
+    /**
+     * @notice Get the current platform fee parameters
+     * @return _platformAddress the current platform address
+     * @return _platformFeeRate the current platform fee rate
+     */
+    function getPlatformFee() external view returns (address _platformAddress, uint256 _platformFeeRate);
 }
 
 library SafeMath {
@@ -624,6 +650,9 @@ abstract contract BaseUtils is IFeedsContractProxiable {
 
     bytes internal constant PASAR_DATA_MAGIC = bytes("Feeds NFT Pasar");
 
+    /**
+     * @dev Fee rates are calculated with a base of 1/1000000
+     */
     uint256 internal constant RATE_BASE = 1000000;
 
     uint256 private guard;
@@ -741,6 +770,8 @@ contract FeedsNFTPasar is
     mapping(address => mapping(uint256 => bool)) internal buyerOrderParticipated;
 
     mapping(uint256 => OrderExtraInfo) internal orderIdToExtraInfo;
+    address internal platformAddress;
+    uint256 internal platformFeeRate;
 
     function supportsInterface(bytes4 _interfaceId) public pure override returns (bool) {
         return
@@ -1100,6 +1131,8 @@ contract FeedsNFTPasar is
         orders[_id].filled = _value;
         orders[_id].royaltyOwner = token.tokenRoyaltyOwner(orders[_id].tokenId);
         orders[_id].royaltyFee = _value.mul(token.tokenRoyaltyFee(orders[_id].tokenId)).div(RATE_BASE);
+        orderIdToExtraInfo[_id].platformAddr = platformAddress;
+        orderIdToExtraInfo[_id].platformFee = _value.mul(platformFeeRate).div(RATE_BASE);
         orders[_id].updateTime = block.timestamp;
 
         if (openOrderToIndex[_id] != openOrders.length.sub(1)) {
@@ -1128,12 +1161,30 @@ contract FeedsNFTPasar is
         addrToBuyer[_buyer].royalty = orders[_id].royaltyFee.add(addrToBuyer[_buyer].royalty);
 
         token.safeTransferFrom(address(this), _buyer, orders[_id].tokenId, orders[_id].amount, PASAR_DATA_MAGIC);
-        (bool success, ) = payable(orders[_id].royaltyOwner).call{value: orders[_id].royaltyFee}("");
-        require(success, "Royalty transfer failed");
-        (success, ) = payable(seller).call{value: orders[_id].filled.sub(orders[_id].royaltyFee)}("");
+        bool success;
+        if (orders[_id].royaltyFee > 0) {
+            (success, ) = payable(orders[_id].royaltyOwner).call{value: orders[_id].royaltyFee}("");
+            require(success, "Royalty transfer failed");
+        }
+        if (orderIdToExtraInfo[_id].platformFee > 0) {
+            (success, ) = payable(orderIdToExtraInfo[_id].platformAddr).call{
+                value: orderIdToExtraInfo[_id].platformFee
+            }("");
+            require(success, "Platform fee transfer failed");
+        }
+        (success, ) = payable(seller).call{
+            value: orders[_id].filled.sub(orders[_id].royaltyFee).sub(orderIdToExtraInfo[_id].platformFee)
+        }("");
         require(success, "Payment transfer failed");
 
         emit OrderFilled(seller, _buyer, _id, orders[_id].royaltyOwner, _value, orders[_id].royaltyFee);
+        emit OrderPlatformFee(
+            orderIdToExtraInfo[_id].platformAddr,
+            orderIdToExtraInfo[_id].platformFee,
+            seller,
+            _buyer,
+            _id
+        );
     }
 
     function getTokenAddress() external view override returns (address) {
@@ -1341,5 +1392,26 @@ contract FeedsNFTPasar is
         }
 
         return _extras;
+    }
+
+    /**
+     * @notice Set the platform fee rate charged for each trade and the platform address to receive the fees
+     * @param _platformAddress the platform address
+     * @param _platformFeeRate The platform fee rate in terms of parts per million
+     */
+    function setPlatformFee(address _platformAddress, uint256 _platformFeeRate) external override inited onlyOwner {
+        require(_platformFeeRate <= RATE_BASE, "Fee rate error");
+        platformAddress = _platformAddress;
+        platformFeeRate = _platformFeeRate;
+    }
+
+    /**
+     * @notice Get the current platform fee parameters
+     * @return _platformAddress the current platform address
+     * @return _platformFeeRate the current platform fee rate
+     */
+    function getPlatformFee() external view override returns (address _platformAddress, uint256 _platformFeeRate) {
+        _platformAddress = platformAddress;
+        _platformFeeRate = platformFeeRate;
     }
 }
