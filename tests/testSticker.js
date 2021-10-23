@@ -165,6 +165,11 @@ const testSticker = async (stickerABI, stickerAddr, creator, seller, tokenId, ga
     ).to.equal(BigInt(approvedBurnValue));
     console.log(`Token approved burned from ${accCreator.address} by ${accSeller.address} successfully`);
 
+    // Get token DID URI from extra token info
+    const { didUri: tokenDidUri } = await stickerContract.methods.tokenExtraInfo(tokenId).call();
+    expect(tokenDidUri, "token DID URI information").to.equal(didUri);
+    console.log(`Token DID URI information is correctly set as ${tokenDidUri}`);
+
     return true;
   } catch (err) {
     console.error(String(err));

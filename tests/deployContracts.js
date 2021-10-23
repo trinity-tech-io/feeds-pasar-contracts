@@ -139,6 +139,25 @@ const testDeploy = async (deployer, gasPrice) => {
     expect(tokenAddrPasar, "Proxied Pasar initialized with token address").to.equal(proxyStickerAddr);
     console.log(`Proxied Pasar contract initialized successfully with token address ${proxyStickerAddr}`);
 
+    // Set platform fee rate
+    const platformAddr = "0xF25F7A31d308ccf52b8EBCf4ee9FabdD8c8C5077";
+    const platformFeeRate = "20000";
+    const platformFeeData = proxiedPasar.methods.setPlatformFee(platformAddr, platformFeeRate).encodeABI();
+    const platformFeeTx = {
+      from: acc.address,
+      to: proxyPasarAddr,
+      value: 0,
+      data: platformFeeData,
+      gasPrice,
+    };
+
+    const { status: platformFeeStatus } = await sendTxWaitForReceipt(platformFeeTx, acc);
+    const { _platformAddress, _platformFeeRate } = await proxiedPasar.methods.getPlatformFee().call();
+    expect(platformFeeStatus, "Proxied Pasar set platform fee transaction status").to.equal(true);
+    expect(_platformAddress, "Proxied Pasar platform address").to.equal(platformAddr);
+    expect(_platformFeeRate, "Proxied Pasar platform fee rate").to.equal(platformFeeRate);
+    console.log(`Proxied Pasar platform fee parameters set successfully with platform address ${_platformAddress} and fee rate ${_platformFeeRate}`);
+
     return { stickerABI, pasarABI, stickerAddr, pasarAddr, proxyStickerAddr, proxyPasarAddr };
   } catch (err) {
     console.error(String(err));

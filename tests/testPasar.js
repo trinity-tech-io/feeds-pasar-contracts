@@ -28,7 +28,9 @@ const testPasar = async (pasarABI, pasarAddr, stickerABI, creator, seller, buyer
     const orderAmount = "7";
     const orderPrice1 = "800000000000000000";
     const orderPrice2 = "1300000000000000000";
-    const didUri = "https://github.com/";
+    const didUriSeller = "https://github.com/elastos-trinity/feeds-nft-contract";
+    const didUriBuyer = "https://github.com/elastos-trinity/pasar-contracts";
+    const platformAddr = "0xF25F7A31d308ccf52b8EBCf4ee9FabdD8c8C5077";
 
     // Check pre-conditions
     const sellerTokenBalance = BigInt(await stickerContract.methods.balanceOf(accSeller.address, tokenId).call());
@@ -65,7 +67,9 @@ const testPasar = async (pasarABI, pasarAddr, stickerABI, creator, seller, buyer
     const sellerTokenBalanceBeforeSale = BigInt(
       await stickerContract.methods.balanceOf(accSeller.address, tokenId).call()
     );
-    const saleData = pasarContract.methods.createOrderForSale(tokenId, saleAmount, salePrice, didUri).encodeABI();
+    const saleData = pasarContract.methods
+      .createOrderForSale(tokenId, saleAmount, salePrice, didUriSeller)
+      .encodeABI();
     const saleTx = {
       from: accSeller.address,
       to: pasarAddr,
@@ -92,13 +96,14 @@ const testPasar = async (pasarABI, pasarAddr, stickerABI, creator, seller, buyer
     console.log(`${accSeller.address} successfully placed token for sale with order id ${saleOrderId}`);
 
     // Buyer purchase token
+    const platformBalanceBeforePurchase = BigInt(await web3.eth.getBalance(platformAddr));
     const creatorEthBalanceBeforePurchase = BigInt(await web3.eth.getBalance(accCreator.address));
     const sellerEthBalanceBeforePurchase = BigInt(await web3.eth.getBalance(accSeller.address));
     const buyerEthBalanceBeforePurchase = BigInt(await web3.eth.getBalance(accBuyer.address));
     const buyerTokenBalanceBeforePurchase = BigInt(
       await stickerContract.methods.balanceOf(accBuyer.address, tokenId).call()
     );
-    const purchaseData = pasarContract.methods.buyOrder(saleOrderId, didUri).encodeABI();
+    const purchaseData = pasarContract.methods.buyOrder(saleOrderId, didUriBuyer).encodeABI();
     const purchaseTx = {
       from: accBuyer.address,
       to: pasarAddr,
@@ -114,6 +119,7 @@ const testPasar = async (pasarABI, pasarAddr, stickerABI, creator, seller, buyer
     } = await sendTxWaitForReceipt(purchaseTx, accBuyer);
     const { gasPrice: purchaseGasPrice } = await web3.eth.getTransaction(purchaseTxhash);
     const purchaseFee = BigInt(purchaseGas) * BigInt(purchaseGasPrice);
+    const platformBalanceAfterPurchase = BigInt(await web3.eth.getBalance(platformAddr));
     const creatorEthBalanceAfterPurchase = BigInt(await web3.eth.getBalance(accCreator.address));
     const sellerEthBalanceAfterPurchase = BigInt(await web3.eth.getBalance(accSeller.address));
     const buyerEthBalanceAfterPurchase = BigInt(await web3.eth.getBalance(accBuyer.address));
@@ -123,12 +129,23 @@ const testPasar = async (pasarABI, pasarAddr, stickerABI, creator, seller, buyer
     const orderAfterPurchase = await pasarContract.methods.getOrderById(saleOrderId).call();
     const filledValueAfterPurchase = BigInt(orderAfterPurchase[12]);
     const royaltyValueAfterPurchase = BigInt(orderAfterPurchase[14]);
-    const sellerEarningAfterPurchase = filledValueAfterPurchase - royaltyValueAfterPurchase;
+
+    // Get extra order info
+    const orderExtraAfterPurchase = await pasarContract.methods.getOrderExtraById(saleOrderId).call();
+    const platformFeeAfterPurchase = BigInt(orderExtraAfterPurchase.platformFee);
+    const sellerUriAfterPurchase = orderExtraAfterPurchase.sellerUri;
+    const buyerUriAfterPurchase = orderExtraAfterPurchase.buyerUri;
+    
+    const sellerEarningAfterPurchase = filledValueAfterPurchase - royaltyValueAfterPurchase - platformFeeAfterPurchase;
     expect(purchaseStatus, "Purchase order transaction status").to.equal(true);
     expect(
       creatorEthBalanceAfterPurchase - creatorEthBalanceBeforePurchase,
       "Creator eth balance changed by sale royalty"
     ).to.equal(royaltyValueAfterPurchase);
+    expect(
+      platformBalanceAfterPurchase - platformBalanceBeforePurchase,
+      "Platform eth balance changed by sale platform fee"
+    ).to.equal(platformFeeAfterPurchase);
     expect(
       sellerEthBalanceAfterPurchase - sellerEthBalanceBeforePurchase,
       "Seller eth balance changed by sale earning"
@@ -141,6 +158,8 @@ const testPasar = async (pasarABI, pasarAddr, stickerABI, creator, seller, buyer
       buyerEthBalanceBeforePurchase - purchaseFee - buyerEthBalanceAfterPurchase,
       "Buyer eth balance changed by purchasing token"
     ).to.equal(filledValueAfterPurchase);
+    expect(sellerUriAfterPurchase, "Seller DID URI recorded in the order").to.equal(didUriSeller);
+    expect(buyerUriAfterPurchase, "Buyer DID URI recorded in the order").to.equal(didUriBuyer);
     console.log(`${accBuyer.address} successfully purchased token from sale with order id ${saleOrderId}`);
 
     // Auction test parameters
@@ -152,7 +171,7 @@ const testPasar = async (pasarABI, pasarAddr, stickerABI, creator, seller, buyer
       await stickerContract.methods.balanceOf(accSeller.address, tokenId).call()
     );
     const auctionData = pasarContract.methods
-      .createOrderForAuction(tokenId, auctionAmount, auctionPrice, auctionEndTime, didUri)
+      .createOrderForAuction(tokenId, auctionAmount, auctionPrice, auctionEndTime, didUriSeller)
       .encodeABI();
     const auctionTx = {
       from: accSeller.address,
@@ -181,7 +200,7 @@ const testPasar = async (pasarABI, pasarAddr, stickerABI, creator, seller, buyer
 
     // Buyer bid token
     const buyerEthBalanceBeforeBid1 = BigInt(await web3.eth.getBalance(accBuyer.address));
-    const bid1Data = pasarContract.methods.bidForOrder(auctionOrderId, didUri).encodeABI();
+    const bid1Data = pasarContract.methods.bidForOrder(auctionOrderId, didUriBuyer).encodeABI();
     const bid1Tx = {
       from: accBuyer.address,
       to: pasarAddr,
@@ -210,7 +229,7 @@ const testPasar = async (pasarABI, pasarAddr, stickerABI, creator, seller, buyer
     // Bidder bid token
     const buyerEthBalanceBeforeBid2 = BigInt(await web3.eth.getBalance(accBuyer.address));
     const bidderEthBalanceBeforeBid2 = BigInt(await web3.eth.getBalance(accBidder.address));
-    const bid2Data = pasarContract.methods.bidForOrder(auctionOrderId, didUri).encodeABI();
+    const bid2Data = pasarContract.methods.bidForOrder(auctionOrderId, didUriBuyer).encodeABI();
     const bid2Tx = {
       from: accBidder.address,
       to: pasarAddr,
@@ -247,6 +266,7 @@ const testPasar = async (pasarABI, pasarAddr, stickerABI, creator, seller, buyer
     console.log("Auction should have ended by now");
 
     // Settle auction (anyone can settle an ended auction, let buyer do it here)
+    const platformBalanceBeforeDeal = BigInt(await web3.eth.getBalance(platformAddr));
     const creatorEthBalanceBeforeDeal = BigInt(await web3.eth.getBalance(accCreator.address));
     const sellerEthBalanceBeforeDeal = BigInt(await web3.eth.getBalance(accSeller.address));
     const bidderTokenBalanceBeforeDeal = BigInt(
@@ -262,6 +282,7 @@ const testPasar = async (pasarABI, pasarAddr, stickerABI, creator, seller, buyer
     };
 
     const { status: settleStatus } = await sendTxWaitForReceipt(settleTx, accBuyer);
+    const platformBalanceAfterDeal = BigInt(await web3.eth.getBalance(platformAddr));
     const creatorEthBalanceAfterDeal = BigInt(await web3.eth.getBalance(accCreator.address));
     const sellerEthBalanceAfterDeal = BigInt(await web3.eth.getBalance(accSeller.address));
     const bidderTokenBalanceAfterDeal = BigInt(
@@ -270,12 +291,23 @@ const testPasar = async (pasarABI, pasarAddr, stickerABI, creator, seller, buyer
     const orderAfterDeal = await pasarContract.methods.getOrderById(auctionOrderId).call();
     const filledValueAfterDeal = BigInt(orderAfterDeal[12]);
     const royaltyValueAfterDeal = BigInt(orderAfterDeal[14]);
-    const sellerEarningAfterDeal = filledValueAfterDeal - royaltyValueAfterDeal;
+
+    // Get extra order info
+    const orderExtraAfterDeal = await pasarContract.methods.getOrderExtraById(auctionOrderId).call();
+    const platformFeeAfterDeal = BigInt(orderExtraAfterDeal.platformFee);
+    const sellerUriAfterDeal = orderExtraAfterDeal.sellerUri;
+    const buyerUriAfterDeal = orderExtraAfterDeal.buyerUri;
+    
+    const sellerEarningAfterDeal = filledValueAfterDeal - royaltyValueAfterDeal - platformFeeAfterDeal;
     expect(settleStatus, "Settle auction order transaction status").to.equal(true);
     expect(
       creatorEthBalanceAfterDeal - creatorEthBalanceBeforeDeal,
       "Creator eth balance changed by auction royalty"
     ).to.equal(royaltyValueAfterDeal);
+    expect(
+      platformBalanceAfterDeal - platformBalanceBeforeDeal,
+      "Platform eth balance changed by auction platform fee"
+    ).to.equal(platformFeeAfterDeal);
     expect(
       sellerEthBalanceAfterDeal - sellerEthBalanceBeforeDeal,
       "Seller eth balance changed by auction earning"
@@ -284,13 +316,17 @@ const testPasar = async (pasarABI, pasarAddr, stickerABI, creator, seller, buyer
       bidderTokenBalanceAfterDeal - bidderTokenBalanceBeforeDeal,
       "Bidder token balance changed by winning auction token"
     ).to.equal(BigInt(auctionAmount));
+    expect(sellerUriAfterDeal, "Seller DID URI recorded in the order").to.equal(didUriSeller);
+    expect(buyerUriAfterDeal, "Buyer DID URI recorded in the order").to.equal(didUriBuyer);
     console.log(`${accBidder.address} successfully won token from auction with order id ${auctionOrderId}`);
 
     // Seller place test order to test change price and cancel functionalities
     const sellerTokenBalanceBeforeOrder = BigInt(
       await stickerContract.methods.balanceOf(accSeller.address, tokenId).call()
     );
-    const orderData = pasarContract.methods.createOrderForSale(tokenId, orderAmount, orderPrice1, didUri).encodeABI();
+    const orderData = pasarContract.methods
+      .createOrderForSale(tokenId, orderAmount, orderPrice1, didUriSeller)
+      .encodeABI();
     const orderTx = {
       from: accSeller.address,
       to: pasarAddr,
