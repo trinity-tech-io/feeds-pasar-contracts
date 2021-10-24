@@ -261,8 +261,8 @@ const testPasar = async (pasarABI, pasarAddr, stickerABI, creator, seller, buyer
     );
 
     // Wait for auction to end
-    console.log("Wait 120s for auction to end...");
-    await sleepMs(120000);
+    console.log("Wait 150s for auction to end...");
+    await sleepMs(150000);
     console.log("Auction should have ended by now");
 
     // Settle auction (anyone can settle an ended auction, let buyer do it here)

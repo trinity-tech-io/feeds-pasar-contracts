@@ -170,6 +170,59 @@ const testSticker = async (stickerABI, stickerAddr, creator, seller, tokenId, ga
     expect(tokenDidUri, "token DID URI information").to.equal(didUri);
     console.log(`Token DID URI information is correctly set as ${tokenDidUri}`);
 
+    // Transfer from creator to seller with Memo
+    const beforeTransferWithMemoFromBalance = BigInt(
+      await stickerContract.methods.balanceOf(accCreator.address, tokenId).call()
+    );
+    const beforeTransferWithMemoToBalance = BigInt(
+      await stickerContract.methods.balanceOf(accSeller.address, tokenId).call()
+    );
+
+    const transferWithMemoValue = "11";
+    const memoString = "Eleven tokens for you!!";
+    const transferWithMemoData = stickerContract.methods
+      .safeTransferFromWithMemo(accCreator.address, accSeller.address, tokenId, transferWithMemoValue, memoString)
+      .encodeABI();
+    const transferWithMemoTx = {
+      from: accCreator.address,
+      to: stickerAddr,
+      value: 0,
+      data: transferWithMemoData,
+      gasPrice,
+    };
+
+    const { status: transferWithMemoStatus, blockNumber: transferWithMemoBlock } = await sendTxWaitForReceipt(
+      transferWithMemoTx,
+      accCreator
+    );
+    const afterTransferWithMemoFromBalance = BigInt(
+      await stickerContract.methods.balanceOf(accCreator.address, tokenId).call()
+    );
+    const afterTransferWithMemoToBalance = BigInt(
+      await stickerContract.methods.balanceOf(accSeller.address, tokenId).call()
+    );
+    expect(transferWithMemoStatus, "Transfer token transaction status").to.equal(true);
+    expect(
+      beforeTransferWithMemoFromBalance - afterTransferWithMemoFromBalance,
+      "Token transfer balance changed for creator"
+    ).to.equal(BigInt(transferWithMemoValue));
+    expect(
+      afterTransferWithMemoToBalance - beforeTransferWithMemoToBalance,
+      "Token transfer balance changed for seller"
+    ).to.equal(BigInt(transferWithMemoValue));
+
+    // Get transfer memo string from event
+    const transferWithMemoEvents = await stickerContract.getPastEvents("TransferSingleWithMemo", {
+      fromBlock: transferWithMemoBlock,
+      toBlock: transferWithMemoBlock,
+      filter: { _from: accCreator.address, _to: accSeller.address },
+    });
+    expect(transferWithMemoEvents, "Array of transfer with memo events").to.have.lengthOf.at.least(1);
+    const transferMemoString = transferWithMemoEvents[0].returnValues._memo;
+    expect(transferMemoString, "Memo message string attached to the transfer").to.equal(memoString);
+
+    console.log(`Token transfer with memo ${transferMemoString} from ${accCreator.address} to ${accSeller.address} successfully`);
+
     return true;
   } catch (err) {
     console.error(String(err));
