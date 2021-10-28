@@ -1880,6 +1880,11 @@ module.exports = {
               "internalType": "uint256",
               "name": "lastActionTime",
               "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "platformFee",
+              "type": "uint256"
             }
           ],
           "internalType": "struct IPasarInfo.BuyerInfo",
@@ -1941,6 +1946,11 @@ module.exports = {
               "internalType": "uint256",
               "name": "lastActionTime",
               "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "platformFee",
+              "type": "uint256"
             }
           ],
           "internalType": "struct IPasarInfo.BuyerInfo",
@@ -2001,6 +2011,11 @@ module.exports = {
             {
               "internalType": "uint256",
               "name": "lastActionTime",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "platformFee",
               "type": "uint256"
             }
           ],
@@ -3096,6 +3111,11 @@ module.exports = {
               "internalType": "uint256",
               "name": "lastActionTime",
               "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "platformFee",
+              "type": "uint256"
             }
           ],
           "internalType": "struct IPasarInfo.SellerInfo",
@@ -3157,6 +3177,11 @@ module.exports = {
               "internalType": "uint256",
               "name": "lastActionTime",
               "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "platformFee",
+              "type": "uint256"
             }
           ],
           "internalType": "struct IPasarInfo.SellerInfo",
@@ -3217,6 +3242,11 @@ module.exports = {
             {
               "internalType": "uint256",
               "name": "lastActionTime",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "platformFee",
               "type": "uint256"
             }
           ],
