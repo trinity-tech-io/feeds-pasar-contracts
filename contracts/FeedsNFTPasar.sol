@@ -458,6 +458,7 @@ interface IPasarInfo {
         uint256 royalty;
         uint256 joinTime;
         uint256 lastActionTime;
+        uint256 platformFee;
     }
 
     struct BuyerInfo {
@@ -469,6 +470,7 @@ interface IPasarInfo {
         uint256 royalty;
         uint256 joinTime;
         uint256 lastActionTime;
+        uint256 platformFee;
     }
 
     function getTokenAddress() external view returns (address);
@@ -855,6 +857,7 @@ contract FeedsNFTPasar is
     ) external override inited reentrancyGuard {
         require(token.isApprovedForAll(msg.sender, address(this)), "Contract is not approved");
         require(_amount > 0 && _price > 0, "Amount and price cannot be zero");
+        require(token.tokenRoyaltyFee(_tokenId).add(platformFeeRate) <= RATE_BASE, "Total fee rate exceeds 100%");
 
         token.safeTransferFrom(msg.sender, address(this), _tokenId, _amount, PASAR_DATA_MAGIC);
 
@@ -899,6 +902,7 @@ contract FeedsNFTPasar is
         require(token.isApprovedForAll(msg.sender, address(this)), "Contract is not approved");
         require(_amount > 0 && _minPrice > 0, "Amount and price cannot be zero");
         require(_endTime > block.timestamp, "End time cannot be in the past");
+        require(token.tokenRoyaltyFee(_tokenId).add(platformFeeRate) <= RATE_BASE, "Total fee rate exceeds 100%");
 
         token.safeTransferFrom(msg.sender, address(this), _tokenId, _amount, PASAR_DATA_MAGIC);
 
@@ -1152,13 +1156,17 @@ contract FeedsNFTPasar is
         sellerOpenToIndex[seller][_id] = 0;
         sellerOpenOrders[seller].pop();
         addrToSeller[seller].openCount = sellerOpenOrders[seller].length;
-        addrToSeller[seller].earned = _value.sub(orders[_id].royaltyFee).add(addrToSeller[seller].earned);
+        addrToSeller[seller].earned = _value.sub(orders[_id].royaltyFee).sub(orderIdToExtraInfo[_id].platformFee).add(
+            addrToSeller[seller].earned
+        );
         addrToSeller[seller].royalty = orders[_id].royaltyFee.add(addrToSeller[seller].royalty);
+        addrToSeller[seller].platformFee = orderIdToExtraInfo[_id].platformFee.add(addrToSeller[seller].platformFee);
 
         buyerFilledOrders[_buyer].push(_id);
         addrToBuyer[_buyer].filledCount = buyerFilledOrders[_buyer].length;
         addrToBuyer[_buyer].paid = _value.add(addrToBuyer[_buyer].paid);
         addrToBuyer[_buyer].royalty = orders[_id].royaltyFee.add(addrToBuyer[_buyer].royalty);
+        addrToBuyer[_buyer].platformFee = orderIdToExtraInfo[_id].platformFee.add(addrToBuyer[_buyer].platformFee);
 
         token.safeTransferFrom(address(this), _buyer, orders[_id].tokenId, orders[_id].amount, PASAR_DATA_MAGIC);
         bool success;
