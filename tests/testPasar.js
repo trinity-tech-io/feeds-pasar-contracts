@@ -128,7 +128,7 @@ const testPasar = async (pasarABI, pasarAddr, stickerABI, creator, seller, buyer
     );
     const orderAfterPurchase = await pasarContract.methods.getOrderById(saleOrderId).call();
     const filledValueAfterPurchase = BigInt(orderAfterPurchase.filled);
-    const royaltyValueAfterPurchase = BigInt(orderAfterPurchase.royalty);
+    const royaltyValueAfterPurchase = BigInt(orderAfterPurchase.royaltyFee);
 
     // Get extra order info
     const orderExtraAfterPurchase = await pasarContract.methods.getOrderExtraById(saleOrderId).call();
@@ -290,7 +290,7 @@ const testPasar = async (pasarABI, pasarAddr, stickerABI, creator, seller, buyer
     );
     const orderAfterDeal = await pasarContract.methods.getOrderById(auctionOrderId).call();
     const filledValueAfterDeal = BigInt(orderAfterDeal.filled);
-    const royaltyValueAfterDeal = BigInt(orderAfterDeal.royalty);
+    const royaltyValueAfterDeal = BigInt(orderAfterDeal.royaltyFee);
 
     // Get extra order info
     const orderExtraAfterDeal = await pasarContract.methods.getOrderExtraById(auctionOrderId).call();
