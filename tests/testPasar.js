@@ -92,7 +92,7 @@ const testPasar = async (pasarABI, pasarAddr, stickerABI, creator, seller, buyer
     const lastOpenOrderAfterSale = await pasarContract.methods
       .getOpenOrderByIndex(String(openOrderCountAfterSale - BigInt(1)))
       .call();
-    const saleOrderId = String(lastOpenOrderAfterSale[0]);
+    const saleOrderId = String(lastOpenOrderAfterSale.orderId);
     console.log(`${accSeller.address} successfully placed token for sale with order id ${saleOrderId}`);
 
     // Buyer purchase token
@@ -127,8 +127,8 @@ const testPasar = async (pasarABI, pasarAddr, stickerABI, creator, seller, buyer
       await stickerContract.methods.balanceOf(accBuyer.address, tokenId).call()
     );
     const orderAfterPurchase = await pasarContract.methods.getOrderById(saleOrderId).call();
-    const filledValueAfterPurchase = BigInt(orderAfterPurchase[12]);
-    const royaltyValueAfterPurchase = BigInt(orderAfterPurchase[14]);
+    const filledValueAfterPurchase = BigInt(orderAfterPurchase.filled);
+    const royaltyValueAfterPurchase = BigInt(orderAfterPurchase.royalty);
 
     // Get extra order info
     const orderExtraAfterPurchase = await pasarContract.methods.getOrderExtraById(saleOrderId).call();
@@ -195,7 +195,7 @@ const testPasar = async (pasarABI, pasarAddr, stickerABI, creator, seller, buyer
     const lastOpenOrderAfterAuction = await pasarContract.methods
       .getOpenOrderByIndex(String(openOrderCountAfterAuction - BigInt(1)))
       .call();
-    const auctionOrderId = String(lastOpenOrderAfterAuction[0]);
+    const auctionOrderId = String(lastOpenOrderAfterAuction.orderId);
     console.log(`${accSeller.address} successfully placed token for auction with order id ${auctionOrderId}`);
 
     // Buyer bid token
@@ -289,8 +289,8 @@ const testPasar = async (pasarABI, pasarAddr, stickerABI, creator, seller, buyer
       await stickerContract.methods.balanceOf(accBidder.address, tokenId).call()
     );
     const orderAfterDeal = await pasarContract.methods.getOrderById(auctionOrderId).call();
-    const filledValueAfterDeal = BigInt(orderAfterDeal[12]);
-    const royaltyValueAfterDeal = BigInt(orderAfterDeal[14]);
+    const filledValueAfterDeal = BigInt(orderAfterDeal.filled);
+    const royaltyValueAfterDeal = BigInt(orderAfterDeal.royalty);
 
     // Get extra order info
     const orderExtraAfterDeal = await pasarContract.methods.getOrderExtraById(auctionOrderId).call();
@@ -349,12 +349,12 @@ const testPasar = async (pasarABI, pasarAddr, stickerABI, creator, seller, buyer
     const lastOpenOrderAfterOrder = await pasarContract.methods
       .getOpenOrderByIndex(String(openOrderCountAfterOrder - BigInt(1)))
       .call();
-    const testOrderId = String(lastOpenOrderAfterOrder[0]);
+    const testOrderId = String(lastOpenOrderAfterOrder.orderId);
     console.log(`${accSeller.address} successfully placed token order for test with order id ${testOrderId}`);
 
     // Seller change order price
     const testOrderBeforeChange = await pasarContract.methods.getOrderById(testOrderId).call();
-    const orderPriceBeforeChange = BigInt(testOrderBeforeChange[5]);
+    const orderPriceBeforeChange = BigInt(testOrderBeforeChange.price);
     expect(orderPriceBeforeChange, "Test order price before change").to.equal(BigInt(orderPrice1));
 
     const changeData = pasarContract.methods.changeOrderPrice(testOrderId, orderPrice2).encodeABI();
@@ -368,7 +368,7 @@ const testPasar = async (pasarABI, pasarAddr, stickerABI, creator, seller, buyer
     const { status: changeStatus } = await sendTxWaitForReceipt(changeTx, accSeller);
     expect(changeStatus, "Test change price transaction status").to.equal(true);
     const testOrderAfterChange = await pasarContract.methods.getOrderById(testOrderId).call();
-    const orderPriceAfterChange = BigInt(testOrderAfterChange[5]);
+    const orderPriceAfterChange = BigInt(testOrderAfterChange.price);
     expect(orderPriceAfterChange, "Test order price before change").to.equal(BigInt(orderPrice2));
     console.log(`${accSeller.address} successfully changed order price with order id ${testOrderId}`);
 
@@ -394,7 +394,7 @@ const testPasar = async (pasarABI, pasarAddr, stickerABI, creator, seller, buyer
       "Seller token balance changed canceling test order"
     ).to.equal(BigInt(orderAmount));
     const testOrderAfterCancel = await pasarContract.methods.getOrderById(testOrderId).call();
-    const orderStateAfterCancel = BigInt(testOrderAfterCancel[2]);
+    const orderStateAfterCancel = BigInt(testOrderAfterCancel.orderState);
     expect(orderStateAfterCancel, "Order state after getting canceled").to.equal(BigInt(3));
     console.log(`${accSeller.address} successfully canceled order with order id ${testOrderId}`);
 
