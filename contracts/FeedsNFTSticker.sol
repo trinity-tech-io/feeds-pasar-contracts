@@ -882,7 +882,7 @@ contract FeedsNFTSticker is
         uint256 _value,
         bytes calldata _data
     ) external override inited reentrancyGuard {
-        _safeTransferFrom(_from, _to, _id, _value, _data);
+        _safeTransferFrom(_from, _to, _id, _value, _data, "");
     }
 
     /**
@@ -908,7 +908,7 @@ contract FeedsNFTSticker is
         uint256[] calldata _values,
         bytes calldata _data
     ) external override inited reentrancyGuard {
-        _safeBatchTransferFrom(_from, _to, _ids, _values, _data);
+        _safeBatchTransferFrom(_from, _to, _ids, _values, _data, "");
     }
 
     /**
@@ -970,7 +970,8 @@ contract FeedsNFTSticker is
         address _to,
         uint256 _id,
         uint256 _value,
-        bytes memory _data
+        bytes memory _data,
+        string memory _memo
     ) internal {
         require(_to != address(0x0), "Receiver cannot be zero address");
         require(_from == msg.sender || operatorApproval[_from][msg.sender] == true, "Sender is not operator");
@@ -989,6 +990,7 @@ contract FeedsNFTSticker is
         }
 
         emit TransferSingle(msg.sender, _from, _to, _id, _value);
+        emit TransferSingleWithMemo(msg.sender, _from, _to, _id, _value, _memo);
 
         if (_to.isContract()) {
             require(
@@ -1004,7 +1006,8 @@ contract FeedsNFTSticker is
         address _to,
         uint256[] memory _ids,
         uint256[] memory _values,
-        bytes memory _data
+        bytes memory _data,
+        string memory _memo
     ) internal {
         require(_to != address(0x0), "Receiver cannot be zero address");
         require(_ids.length == _values.length, "_ids and _values length mismatch");
@@ -1029,6 +1032,7 @@ contract FeedsNFTSticker is
         }
 
         emit TransferBatch(msg.sender, _from, _to, _ids, _values);
+        emit TransferBatchWithMemo(msg.sender, _from, _to, _ids, _values, _memo);
 
         if (_to.isContract()) {
             require(
@@ -1080,7 +1084,7 @@ contract FeedsNFTSticker is
         uint256 _id,
         uint256 _value
     ) external override inited reentrancyGuard {
-        _safeTransferFrom(_from, _to, _id, _value, "");
+        _safeTransferFrom(_from, _to, _id, _value, "", "");
     }
 
     /**
@@ -1097,7 +1101,7 @@ contract FeedsNFTSticker is
         uint256[] calldata _ids,
         uint256[] calldata _values
     ) external override inited reentrancyGuard {
-        _safeBatchTransferFrom(_from, _to, _ids, _values, "");
+        _safeBatchTransferFrom(_from, _to, _ids, _values, "", "");
     }
 
     /**
@@ -1488,8 +1492,7 @@ contract FeedsNFTSticker is
         bytes calldata _data,
         string calldata _memo
     ) external override inited reentrancyGuard {
-        _safeTransferFrom(_from, _to, _id, _value, _data);
-        emit TransferSingleWithMemo(msg.sender, _from, _to, _id, _value, _memo);
+        _safeTransferFrom(_from, _to, _id, _value, _data, _memo);
     }
 
     /**
@@ -1518,8 +1521,7 @@ contract FeedsNFTSticker is
         bytes calldata _data,
         string calldata _memo
     ) external override inited reentrancyGuard {
-        _safeBatchTransferFrom(_from, _to, _ids, _values, _data);
-        emit TransferBatchWithMemo(msg.sender, _from, _to, _ids, _values, _memo);
+        _safeBatchTransferFrom(_from, _to, _ids, _values, _data, _memo);
     }
 
     /**
@@ -1538,8 +1540,7 @@ contract FeedsNFTSticker is
         uint256 _value,
         string calldata _memo
     ) external override inited reentrancyGuard {
-        _safeTransferFrom(_from, _to, _id, _value, "");
-        emit TransferSingleWithMemo(msg.sender, _from, _to, _id, _value, _memo);
+        _safeTransferFrom(_from, _to, _id, _value, "", _memo);
     }
 
     /**
@@ -1558,7 +1559,6 @@ contract FeedsNFTSticker is
         uint256[] calldata _values,
         string calldata _memo
     ) external override inited reentrancyGuard {
-        _safeBatchTransferFrom(_from, _to, _ids, _values, "");
-        emit TransferBatchWithMemo(msg.sender, _from, _to, _ids, _values, _memo);
+        _safeBatchTransferFrom(_from, _to, _ids, _values, "", _memo);
     }
 }
