@@ -8,13 +8,16 @@ const getVersion = async (abiPath, codeAddr, rpcUrl = null) => {
 
   const web3 = await getWeb3(rpcUrl);
   const nftContract = new web3.eth.Contract(nftABI, codeAddr);
+  const proxyContract = new web3.eth.Contract(proxiableABI, codeAddr);
 
   const version = await nftContract.methods.getVersion().call();
   const magic = await nftContract.methods.getMagic().call();
+  const logicAddr = await proxyContract.methods.getCodeAddress().call();
 
   console.log(`Contract address: ${codeAddr}`);
   console.log(`Version: ${version}`);
   console.log(`Magic: ${magic}`);
+  console.log(`LogicAddr: ${logicAddr}`);
 }
 
 const getPlatformFee = async(abiPath, codeAddr, rpcUrl = null) => {
