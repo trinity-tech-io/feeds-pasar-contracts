@@ -17,6 +17,18 @@ const getVersion = async (abiPath, codeAddr, rpcUrl = null) => {
   console.log(`Magic: ${magic}`);
 }
 
+const getPlatformFee = async(abiPath, codeAddr, rpcUrl = null) => {
+  const jsonStr = await loadFile(abiPath);
+  const nftABI = JSON.parse(jsonStr);
+
+  const web3 = await getWeb3(rpcUrl);
+  const nftContract = new web3.eth.Contract(nftABI, codeAddr);
+
+  const {_platformAddress, _platformFeeRate} = await nftContract.methods.getPlatformFee().call();
+  console.log(`platformAddr: ${_platformAddress}`);
+  console.log(`platformFee : ${_platformFeeRate}`);
+}
+
 module.exports = {
   getVersion,
 };
@@ -38,7 +50,9 @@ if (require.main == module) {
       if (pasarAddr) {
         console.log("====>>> Pasar contract address details =====");
         await getVersion("../abis/FeedsNFTPasar.json", pasarAddr, rpcUrl);
+        await getPlatformFee("../abis/FeedsNFTPasar.json", pasarAddr, rpcUrl);
       }
+
     } catch (err) {
       console.error(String(err));
     }
