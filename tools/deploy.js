@@ -166,7 +166,7 @@ if (require.main == module) {
       const { rpcUrl, gasPrice, deployPK, withNFT, withPasar, withProxy, nftAddr } = await getParams();
       console.log(`rpcUrl  : ${rpcUrl}`);
       console.log(`gasPrice: ${gasPrice}`);
-      console.log(`deployPK: ${deployPK}`);
+      //console.log(`deployPK: ${deployPK}`);
       console.log(`NFT contract addr: ${nftAddr}`);
 
       console.log("Deploy contracts:")
@@ -191,21 +191,21 @@ if (require.main == module) {
           console.log(`NFT proxy contract deployed at ${proxyNftAddr}`);
         }
       } else {
-        console.log("ddddddd");
         proxyNftAddr = nftAddr;
       }
 
       if (withPasar) {
-        if (!proxyNftAddr) {
+        if (withProxy & !proxyNftAddr) {
           console.error("Error: need nft proxy address.");
           return;
         }
 
         const { abi: pasarABI, contractAddress: pasarAddr } = await deployPasar(web3, account, gasPrice);
         console.log(`Pasar contract deployed at ${pasarAddr}`);
-        console.log(`proxyNftAddr: ${proxyNftAddr}`);
 
         if (withProxy) {
+          console.log(`proxyNftAddr: ${proxyNftAddr}`);
+
           const proxyPasarAddr = await deployPasarProxy(web3, account, gasPrice, pasarABI, pasarAddr, proxyNftAddr);
           console.log(`Pasar proxy contract deployed at ${proxyPasarAddr}`);
         }
