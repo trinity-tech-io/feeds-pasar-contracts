@@ -36,8 +36,43 @@ const upgradeContracts = async (owner, proxyAddr, newCodeAddr, gasPrice, rpcUrl 
   }
 };
 
+const setPlatformFee = async(owner, proxyAddr, gasPrice, rpcUrl = null) => {
+  try {
+    const jsonStr = await loadFile("../abis/FeedsNFTPasar.json");
+    const pasarABI = JSON.parse(jsonStr);
+
+    const web3 = await getWeb3();
+    const proxyContract = new web3.eth.Contract(pasarABI, proxyAddr);
+
+    const accOwner = await getAccount(owner);
+
+    const platformAddr = "0xF25F7A31d308ccf52b8EBCf4ee9FabdD8c8C5077";
+    const platformFeeRate = "20000";
+    const platformFeeData = proxyContract.methods.setPlatformFee(platformAddr, platformFeeRate).encodeABI();
+    const platformFeeTx = {
+      from: accOwner.address,
+      to: proxyAddr,
+      value: 0,
+      data: platformFeeData,
+      gasPrice,
+    };
+
+    const { status: setFeeStatus } = await sendTxWaitForReceipt(platformFeeTx, accOwner);
+    if (!setFeeStatus) {
+      console.error(`set platform feeRate at contract ${proxyAddr} transaction failed`);
+      return false;
+    }
+
+    return true;
+  } catch (err) {
+    console.error(String(err));
+    return false;
+  }
+};
+
 module.exports = {
   upgradeContracts,
+  setPlatformFee
 };
 
 if (require.main == module) {
@@ -107,17 +142,25 @@ if (require.main == module) {
         const pasarContract = new web3.eth.Contract(pasarABI, proxiedPasarAddr);
         console.log("NFT contract object initialized");
 
-        const result = await upgradeContracts(ownerPK, proxiedPasarAddr, newPasarAddr, gasPrice, rpcUrl);
+        let result = await upgradeContracts(ownerPK, proxiedPasarAddr, newPasarAddr, gasPrice, rpcUrl);
         expect(result, "Result of upgrading logic Pasar contract ").to.equal(true);
         console.log("Logic Pasar contract successfully has been upgraded");
 
+        result = await setPlatformFee(ownerPK, proxiedPasarAddr, gasPrice, rpcUrl);
+        expect(result, "Result of setPlatformFee ").to.equal(true);
+        console.log("Set platform feeRate for pasar contract.");
+
         const newVersion = await pasarContract.methods.getVersion().call();
         console.log(`The new version of Pasar contract is ${newVersion}`);
-        expect(newVersion, "The new version value").to.equal("v0.1")
+        expect(newVersion, "The new version value").to.equal("v0.2")
 
         const newMagic = await pasarContract.methods.getMagic().call();
         console.log(`The new magic value of Pasar contract is ${newMagic}`);
-        expect(newMagic, "The new magic value").to.equal("20210801")
+        expect(newMagic, "The new magic value").to.equal("20210930")
+
+        const { _platformAddress, _platformFeeRate } = await pasarContract.methods.getPlatformFee().call();
+        console.log(`_platformAddress: ${_platformAddress}`);
+        console.log(`_platformFeeRate: ${_platformFeeRate}`);
       }
       else {
         console.log("No need to upgrade for logic Pasar contract");
