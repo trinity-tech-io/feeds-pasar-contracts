@@ -123,11 +123,11 @@ if (require.main == module) {
 
         const newVersion = await nftContract.methods.getVersion().call();
         console.log(`The new version of NFT contract is ${newVersion}`);
-        expect(newVersion, "The new version value").to.equal("v0.1")
+        expect(newVersion, "The new version value").to.equal("v0.3")
 
         const newMagic = await nftContract.methods.getMagic().call();
         console.log(`The new magic value of NFT contract is ${newMagic}`);
-        expect(newMagic, "The new magic value").to.equal("20210801")
+        expect(newMagic, "The new magic value").to.equal("20211111")
       } else {
         console.log("No need to upgrade for logic NFT contract");
       }
@@ -152,11 +152,11 @@ if (require.main == module) {
 
         const newVersion = await pasarContract.methods.getVersion().call();
         console.log(`The new version of Pasar contract is ${newVersion}`);
-        expect(newVersion, "The new version value").to.equal("v0.2")
+        expect(newVersion, "The new version value").to.equal("v0.3")
 
         const newMagic = await pasarContract.methods.getMagic().call();
         console.log(`The new magic value of Pasar contract is ${newMagic}`);
-        expect(newMagic, "The new magic value").to.equal("20210930")
+        expect(newMagic, "The new magic value").to.equal("20211111")
 
         const { _platformAddress, _platformFeeRate } = await pasarContract.methods.getPlatformFee().call();
         console.log(`_platformAddress: ${_platformAddress}`);

@@ -748,8 +748,8 @@ contract FeedsNFTPasar is
     using AddressUtils for address;
 
     string internal constant contractName = "Feeds NFT Pasar";
-    string internal constant version = "v0.1";
-    string internal constant magic = "20210801";
+    string internal constant version = "v0.3";
+    string internal constant magic = "20211111";
 
     address internal tokenAddress;
     IERC1155WithRoyalty internal token;
