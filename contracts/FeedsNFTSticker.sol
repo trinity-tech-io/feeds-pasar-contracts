@@ -831,8 +831,8 @@ contract FeedsNFTSticker is
 
     string internal constant name_ = "Feeds NFT Sticker";
     string internal constant symbol_ = "FSTK";
-    string internal constant version = "v0.2";
-    string internal constant magic = "20210930";
+    string internal constant version = "v0.3";
+    string internal constant magic = "20211111";
 
     mapping(uint256 => mapping(address => uint256)) internal balances;
     mapping(address => mapping(address => bool)) internal operatorApproval;
