@@ -675,7 +675,7 @@ abstract contract BaseUtils is IFeedsContractProxiable {
         owner = msg.sender;
     }
 
-    function initialize() external {
+    function initialize() external virtual {
         _initialize();
     }
 
@@ -756,7 +756,7 @@ contract FeedsNFTPasar is
 
     OrderInfo[] internal orders;
     uint256[] internal openOrders;
-    mapping(uint256 => uint256) openOrderToIndex;
+    mapping(uint256 => uint256) internal openOrderToIndex;
 
     mapping(address => SellerInfo) internal addrToSeller;
     mapping(address => BuyerInfo) internal addrToBuyer;
@@ -780,6 +780,10 @@ contract FeedsNFTPasar is
             _interfaceId == INTERFACE_SIGNATURE_ERC165 ||
             _interfaceId == INTERFACE_SIGNATURE_ERC1155TokenReceiver ||
             _interfaceId == INTERFACE_SIGNATURE_FeedsContractProxiable;
+    }
+
+    function initialize() external pure override {
+        revert("Do not use this method");
     }
 
     function initialize(address _tokenAddress) external {
