@@ -21,6 +21,14 @@ const testDeploy = async (deployer, gasPrice) => {
     expect(pasarCode, "Pasar contract bytecode").to.be.a("string");
     console.log("Pasar contract compiled");
 
+    const { abi: galleriaABI, bytecode: galleriaCode } = await compileContract(
+      path.resolve(__dirname, "../contracts/FeedsNFTGalleria.sol"),
+      "FeedsNFTGalleria"
+    );
+    expect(galleriaABI, "Galleria contract ABI").to.be.an("array");
+    expect(galleriaCode, "Galleria contract bytecode").to.be.a("string");
+    console.log("Galleria contract compiled");
+
     const { abi: proxyABI, bytecode: proxyCode } = await compileContract(
       path.resolve(__dirname, "../contracts/FeedsContractProxy.sol"),
       "FeedsContractProxy"
@@ -33,6 +41,7 @@ const testDeploy = async (deployer, gasPrice) => {
     const web3 = await getWeb3();
     const stickerContract = new web3.eth.Contract(stickerABI);
     const pasarContract = new web3.eth.Contract(pasarABI);
+    const galleriaContract = new web3.eth.Contract(galleriaABI);
     const proxyContract = new web3.eth.Contract(proxyABI);
 
     //Prepare deployer account
@@ -66,6 +75,20 @@ const testDeploy = async (deployer, gasPrice) => {
     expect(pasarStatus, "Pasar contract deploy transaction status").to.equal(true);
     expect(pasarAddr, "Pasar contract address").to.be.a("string").with.lengthOf("42");
     console.log(`Pasar contract deployed successfully at address ${pasarAddr}`);
+
+    //Deploy the Galleria contract
+    const galleriaData = galleriaContract.deploy({ data: galleriaCode }).encodeABI();
+    const galleriaTx = {
+      from: acc.address,
+      value: 0,
+      data: galleriaData,
+      gasPrice,
+    };
+
+    const { contractAddress: galleriaAddr, status: galleriaStatus } = await sendTxWaitForReceipt(galleriaTx, acc);
+    expect(galleriaStatus, "Galleria contract deploy transaction status").to.equal(true);
+    expect(galleriaAddr, "Galleria contract address").to.be.a("string").with.lengthOf("42");
+    console.log(`Galleria contract deployed successfully at address ${galleriaAddr}`);
 
     //Deploy the Proxy contract for Sticker
     const proxyStickerData = proxyContract.deploy({ data: proxyCode, arguments: [stickerAddr] }).encodeABI();
@@ -101,9 +124,27 @@ const testDeploy = async (deployer, gasPrice) => {
     expect(proxyPasarAddr, "Proxy Pasar contract address").to.be.a("string").with.lengthOf("42");
     console.log(`Proxy Pasar contract deployed successfully at address ${proxyPasarAddr}`);
 
+    //Deploy the Proxy contract for Galleria
+    const proxyGalleriaData = proxyContract.deploy({ data: proxyCode, arguments: [galleriaAddr] }).encodeABI();
+    const proxyGalleriaTx = {
+      from: acc.address,
+      value: 0,
+      data: proxyGalleriaData,
+      gasPrice,
+    };
+
+    const { contractAddress: proxyGalleriaAddr, status: proxyGalleriaStatus } = await sendTxWaitForReceipt(
+      proxyGalleriaTx,
+      acc
+    );
+    expect(proxyGalleriaStatus, "Proxy Galleria contract deploy transaction status").to.equal(true);
+    expect(proxyGalleriaAddr, "Proxy Galleria contract address").to.be.a("string").with.lengthOf("42");
+    console.log(`Proxy Galleria contract deployed successfully at address ${proxyGalleriaAddr}`);
+
     // Instantiate contract objects via proxies
     const proxiedSticker = new web3.eth.Contract(stickerABI, proxyStickerAddr);
     const proxiedPasar = new web3.eth.Contract(pasarABI, proxyPasarAddr);
+    const proxiedGalleria = new web3.eth.Contract(galleriaABI, proxyGalleriaAddr);
 
     // Initialize proxied Sticker contract
     const initStickerData = proxiedSticker.methods.initialize().encodeABI();
@@ -158,7 +199,29 @@ const testDeploy = async (deployer, gasPrice) => {
     expect(_platformFeeRate, "Proxied Pasar platform fee rate").to.equal(platformFeeRate);
     console.log(`Proxied Pasar platform fee parameters set successfully with platform address ${_platformAddress} and fee rate ${_platformFeeRate}`);
 
-    return { stickerABI, pasarABI, stickerAddr, pasarAddr, proxyStickerAddr, proxyPasarAddr };
+    // Initialize proxied Galleria contract
+    const minFee = "100000000000000000";
+    const initGalleriaData = proxiedGalleria.methods.initialize(proxyStickerAddr, platformAddr, minFee).encodeABI();
+    const initGalleriaTx = {
+      from: acc.address,
+      to: proxyGalleriaAddr,
+      value: 0,
+      data: initGalleriaData,
+      gasPrice,
+    };
+
+    const { status: initGalleriaStatus } = await sendTxWaitForReceipt(initGalleriaTx, acc);
+    const initedGalleria = await proxiedGalleria.methods.initialized().call();
+    const tokenAddrGalleria = await proxiedGalleria.methods.getTokenAddress().call();
+    const { _platformAddress: _platformAddress2, _minFee} = await proxiedGalleria.methods.getFeeParams().call();
+    expect(initGalleriaStatus, "Proxied Galleria contract initialize transaction status").to.equal(true);
+    expect(initedGalleria, "Proxied Galleria contract initialized result").to.equal(true);
+    expect(tokenAddrGalleria, "Proxied Galleria initialized with token address").to.equal(proxyStickerAddr);
+    expect(_platformAddress2, "Proxied Galleria platform address").to.equal(platformAddr);
+    expect(_minFee, "Proxied Galleria minimum fee").to.equal(minFee);
+    console.log(`Proxied Galleria contract initialized successfully with token address ${proxyStickerAddr}, platform address ${platformAddr} and minimum fee ${minFee}`);
+
+    return { stickerABI, pasarABI, galleriaABI, stickerAddr, pasarAddr, galleriaAddr, proxyStickerAddr, proxyPasarAddr, proxyGalleriaAddr };
   } catch (err) {
     console.error(String(err));
     return;
