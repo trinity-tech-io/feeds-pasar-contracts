@@ -28,6 +28,7 @@ const getParams = async () => {
     const options = program.opts();
     options.stickerABI = config.stickerABI;
     options.pasarABI = config.pasarABI;
+    options.galleriaABI = config.galleriaABI;
     return options;
   } catch (err) {
     console.error(String(err));
