@@ -424,11 +424,32 @@ interface IPasarOrder {
      * @dev for auction orders, the minimum starting price for the bids is changed.
      * @dev Only an order's seller can change its price
      * @param _orderId The id of the order with its price to be changed
+     * @param _price The new price of the order
      */
     function changeOrderPrice(uint256 _orderId, uint256 _price) external;
 }
 
 interface IPasarInfo {
+    /**
+     * @dev Order info data structure
+     * @param orderId The identifier of the order, incrementing uint256 starting from 0
+     * @param orderType The type of the order, 1 is sale order, 2 is auction order, 3 is splittable order
+     * @param orderState The state of the order, 1 is open, 2 is filled, 3 is cancelled
+     * @param tokenId The token type placed in the order
+     * @param amount The amount of token placed in the order
+     * @param price The price asked for the order (minimum bidding price for auction order)
+     * @param endTime The end time of the auction (only meaningful for auction order)
+     * @param sellerAddr The address of the seller that created the order
+     * @param buyerAddr The address of the buyer of the order
+     * @param bids The number of bids placed on the order (only meaningful for auction orders)
+     * @param lastBidder The address of the last bidder that bids on the order (only meaningful for auction orders)
+     * @param lastBid The last bid price on the order (only meaningful for auction orders)
+     * @param filled The filled price of the order (only meaningful for filled orders)
+     * @param royaltyOwner The address of the royalty owner for the token type placed in the order
+     * @param royaltyFee The royalty fee associated with the order (only meaningful for filled orders)
+     * @param createTime The timestamp of the order creation
+     * @param updateTime The timestamp of last order info update
+     */
     struct OrderInfo {
         uint256 orderId;
         uint256 orderType;
@@ -449,6 +470,18 @@ interface IPasarInfo {
         uint256 updateTime;
     }
 
+    /**
+     * @dev Seller info data structure
+     * @param index The index of the seller, incrementing uint256 starting from 0
+     * @param sellerAddr The address of the seller
+     * @param orderCount The number of orders created by the seller
+     * @param openCount The number of currently open orders created by the seller
+     * @param earned The total amount of revenue earned by the seller
+     * @param royalty The total amount of royalty fee associated with orders created by the seller
+     * @param joinTime The timestamp when the seller first creates an order in Pasar
+     * @param lastActionTime The timestamp of the sellerʻs last action in Pasar
+     * @param platformFee The total amount of platform fee associated with orders created by the seller
+     */
     struct SellerInfo {
         uint256 index;
         address sellerAddr;
@@ -461,6 +494,18 @@ interface IPasarInfo {
         uint256 platformFee;
     }
 
+    /**
+     * @dev Buyer info data structure
+     * @param index The index of the buyer, incrementing uint256 starting from 0
+     * @param buyerAddr The address of the buyer
+     * @param orderCount The number of orders the buyer participated to buy or bid on
+     * @param filledCount The number of orders filled by the buyer
+     * @param paid The total amount of cost paid by the buyer
+     * @param royalty The total amount of royalty fee associated with orders filled by the buyer
+     * @param joinTime The timestamp when the buyer first participated to buy or bid on an order in Pasar
+     * @param lastActionTime The timestamp of the buyerʻs last action in Pasar
+     * @param platformFee The total amount of platform fee associated with orders filled by the seller
+     */
     struct BuyerInfo {
         uint256 index;
         address buyerAddr;
@@ -473,59 +518,177 @@ interface IPasarInfo {
         uint256 platformFee;
     }
 
+    /**
+     * @notice Get the NFT token address accepted by the Pasar
+     * @return The NFT token address
+     */
     function getTokenAddress() external view returns (address);
 
+    /**
+     * @notice Get the total number of orders ever created in the Pasar
+     * @return The number of orders
+     */
     function getOrderCount() external view returns (uint256);
 
+    /**
+     * @notice Get order information of a given order
+     * @param _orderId The id of the order, should be less than `getOrderCount`
+     * @return Order information
+     */
     function getOrderById(uint256 _orderId) external view returns (OrderInfo memory);
 
+    /**
+     * @notice Get order information of multiple orders
+     * @param _orderIds The ids of the orders
+     * @return Array of multiple order information
+     */
     function getOrderByIdBatch(uint256[] calldata _orderIds) external view returns (OrderInfo[] memory);
 
+    /**
+     * @notice Get the number of open orders currently in the Pasar
+     * @return The number of open orders
+     */
     function getOpenOrderCount() external view returns (uint256);
 
+    /**
+     * @notice Enumerate order information of an open order
+     * @param _index A counter less than `getOpenOrderCount`
+     * @return Order information
+     */
     function getOpenOrderByIndex(uint256 _index) external view returns (OrderInfo memory);
 
+    /**
+     * @notice Enumerate order information for multiple indexes
+     * @param _indexes An array of counters less than `getOpenOrderCount`
+     * @return Array of multiple order information
+     */
     function getOpenOrderByIndexBatch(uint256[] calldata _indexes) external view returns (OrderInfo[] memory);
 
+    /**
+     * @notice Get the total number of sellers participated in the Pasar
+     * @return The number of sellers
+     */
     function getSellerCount() external view returns (uint256);
 
+    /**
+     * @notice Get seller information of a given seller
+     * @param _seller The address of the seller
+     * @return Seller information
+     */
     function getSellerByAddr(address _seller) external view returns (SellerInfo memory);
 
+    /**
+     * @notice Enumerate seller information of a given seller
+     * @param _index A counter less than `getSellerCount`
+     * @return Seller information
+     */
     function getSellerByIndex(uint256 _index) external view returns (SellerInfo memory);
 
+    /**
+     * @notice Enumerate seller information for multiple indexes
+     * @param _indexes An array of counters less than `getSellerCount`
+     * @return Array of multiple seller information
+     */
     function getSellerByIndexBatch(uint256[] calldata _indexes) external view returns (SellerInfo[] memory);
 
+    /**
+     * @notice Enumerate order information created by a given seller
+     * @param _seller A seller address
+     * @param _index A counter less than `orderCount` of a given seller
+     * @return Order information
+     */
     function getSellerOrderByIndex(address _seller, uint256 _index) external view returns (OrderInfo memory);
 
+    /**
+     * @notice Enumerate order information for multiple indexes created by a given seller
+     * @param _seller A seller address
+     * @param _indexes An array of counters less than `orderCount` of a given seller
+     * @return Array of multiple order information
+     */
     function getSellerOrderByIndexBatch(address _seller, uint256[] calldata _indexes)
         external
         view
         returns (OrderInfo[] memory);
 
+    /**
+     * @notice Enumerate open order information created by a given seller
+     * @param _seller A seller address
+     * @param _index A counter less than `openCount` of a given seller
+     * @return Order information
+     */
     function getSellerOpenByIndex(address _seller, uint256 _index) external view returns (OrderInfo memory);
 
+    /**
+     * @notice Enumerate open order information for multiple indexes created by a given seller
+     * @param _seller A seller address
+     * @param _indexes An array of counters less than `openCount` of a given seller
+     * @return Array of multiple order information
+     */
     function getSellerOpenByIndexBatch(address _seller, uint256[] calldata _indexes)
         external
         view
         returns (OrderInfo[] memory);
 
+    /**
+     * @notice Get the total number of buyers participated in the Pasar
+     * @return The number of buyers
+     */
     function getBuyerCount() external view returns (uint256);
 
+    /**
+     * @notice Get buyer information of a given buyer
+     * @param _buyer The address of the buyer
+     * @return Buyer information
+     */
     function getBuyerByAddr(address _buyer) external view returns (BuyerInfo memory);
 
+    /**
+     * @notice Enumerate buyer information of a given buyer
+     * @param _index A counter less than `getBuyerCount`
+     * @return Buyer information
+     */
     function getBuyerByIndex(uint256 _index) external view returns (BuyerInfo memory);
 
+    /**
+     * @notice Enumerate buyer information for multiple indexes
+     * @param _indexes An array of counters less than `getBuyerCount`
+     * @return Array of multiple buyer information
+     */
     function getBuyerByIndexBatch(uint256[] calldata _indexes) external view returns (BuyerInfo[] memory);
 
+    /**
+     * @notice Enumerate order information a given buyer has participated
+     * @param _buyer A buyer address
+     * @param _index A counter less than `orderCount` of a given buyer
+     * @return Order information
+     */
     function getBuyerOrderByIndex(address _buyer, uint256 _index) external view returns (OrderInfo memory);
 
+    /**
+     * @notice Enumerate order information for multiple indexes a given buyer has participated
+     * @param _buyer A buyer address
+     * @param _indexes An array of counters less than `orderCount` of a given buyer
+     * @return Array of multiple order information
+     */
     function getBuyerOrderByIndexBatch(address _buyer, uint256[] calldata _indexes)
         external
         view
         returns (OrderInfo[] memory);
 
+    /**
+     * @notice Enumerate filled order information a given buyer has bought
+     * @param _buyer A buyer address
+     * @param _index A counter less than `filledCount` of a given buyer
+     * @return Order information
+     */
     function getBuyerFilledByIndex(address _buyer, uint256 _index) external view returns (OrderInfo memory);
 
+    /**
+     * @notice Enumerate filled order information for multiple indexes a given buyer has bought
+     * @param _buyer A buyer address
+     * @param _indexes An array of counters less than `filledCount` of a given buyer
+     * @return Array of multiple order information
+     */
     function getBuyerFilledByIndexBatch(address _buyer, uint256[] calldata _indexes)
         external
         view
@@ -564,6 +727,13 @@ interface IPasarUpgraded {
         uint256 indexed _orderId
     );
 
+    /**
+     * @dev Order extra info data structure
+     * @param sellerUri DID URI of the orderʻs seller
+     * @param buyerUri DID URI of the orderʻs buyer
+     * @param platformAddr The platform wallet address that collects the orderʻs platform fee
+     * @param platformFee The platform fee paid with the order
+     */
     struct OrderExtraInfo {
         string sellerUri;
         string buyerUri;
@@ -1199,18 +1369,36 @@ contract FeedsNFTPasar is
         );
     }
 
+    /**
+     * @notice Get the NFT token address accepted by the Pasar
+     * @return The NFT token address
+     */
     function getTokenAddress() external view override returns (address) {
         return tokenAddress;
     }
 
+    /**
+     * @notice Get the total number of orders ever created in the Pasar
+     * @return The number of orders
+     */
     function getOrderCount() external view override returns (uint256) {
         return orders.length;
     }
 
+    /**
+     * @notice Get order information of a given order
+     * @param _orderId The id of the order, should be less than `getOrderCount`
+     * @return Order information
+     */
     function getOrderById(uint256 _orderId) external view override returns (OrderInfo memory) {
         return orders[_orderId];
     }
 
+    /**
+     * @notice Get order information of multiple orders
+     * @param _orderIds The ids of the orders
+     * @return Array of multiple order information
+     */
     function getOrderByIdBatch(uint256[] calldata _orderIds) external view override returns (OrderInfo[] memory) {
         OrderInfo[] memory _orders = new OrderInfo[](_orderIds.length);
 
@@ -1221,14 +1409,28 @@ contract FeedsNFTPasar is
         return _orders;
     }
 
+    /**
+     * @notice Get the number of open orders currently in the Pasar
+     * @return The number of open orders
+     */
     function getOpenOrderCount() external view override returns (uint256) {
         return openOrders.length;
     }
 
+    /**
+     * @notice Enumerate order information of an open order
+     * @param _index A counter less than `getOpenOrderCount`
+     * @return Order information
+     */
     function getOpenOrderByIndex(uint256 _index) external view override returns (OrderInfo memory) {
         return orders[openOrders[_index]];
     }
 
+    /**
+     * @notice Enumerate order information for multiple indexes
+     * @param _indexes An array of counters less than `getOpenOrderCount`
+     * @return Array of multiple order information
+     */
     function getOpenOrderByIndexBatch(uint256[] calldata _indexes)
         external
         view
@@ -1244,18 +1446,37 @@ contract FeedsNFTPasar is
         return _orders;
     }
 
+    /**
+     * @notice Get the total number of sellers participated in the Pasar
+     * @return The number of sellers
+     */
     function getSellerCount() external view override returns (uint256) {
         return sellers.length;
     }
 
+    /**
+     * @notice Get seller information of a given seller
+     * @param _seller The address of the seller
+     * @return Seller information
+     */
     function getSellerByAddr(address _seller) external view override returns (SellerInfo memory) {
         return addrToSeller[_seller];
     }
 
+    /**
+     * @notice Enumerate seller information of a given seller
+     * @param _index A counter less than `getSellerCount`
+     * @return Seller information
+     */
     function getSellerByIndex(uint256 _index) external view override returns (SellerInfo memory) {
         return addrToSeller[sellers[_index]];
     }
 
+    /**
+     * @notice Enumerate seller information for multiple indexes
+     * @param _indexes An array of counters less than `getSellerCount`
+     * @return Array of multiple seller information
+     */
     function getSellerByIndexBatch(uint256[] calldata _indexes) external view override returns (SellerInfo[] memory) {
         SellerInfo[] memory _sellers = new SellerInfo[](_indexes.length);
 
@@ -1266,6 +1487,12 @@ contract FeedsNFTPasar is
         return _sellers;
     }
 
+    /**
+     * @notice Enumerate order information created by a given seller
+     * @param _seller A seller address
+     * @param _index A counter less than `orderCount` of a given seller
+     * @return Order information
+     */
     function getSellerOrderByIndex(address _seller, uint256 _index)
         external
         view
@@ -1275,6 +1502,12 @@ contract FeedsNFTPasar is
         return orders[sellerOrders[_seller][_index]];
     }
 
+    /**
+     * @notice Enumerate order information for multiple indexes created by a given seller
+     * @param _seller A seller address
+     * @param _indexes An array of counters less than `orderCount` of a given seller
+     * @return Array of multiple order information
+     */
     function getSellerOrderByIndexBatch(address _seller, uint256[] calldata _indexes)
         external
         view
@@ -1290,10 +1523,22 @@ contract FeedsNFTPasar is
         return _orders;
     }
 
+    /**
+     * @notice Enumerate open order information created by a given seller
+     * @param _seller A seller address
+     * @param _index A counter less than `openCount` of a given seller
+     * @return Order information
+     */
     function getSellerOpenByIndex(address _seller, uint256 _index) external view override returns (OrderInfo memory) {
         return orders[sellerOpenOrders[_seller][_index]];
     }
 
+    /**
+     * @notice Enumerate open order information for multiple indexes created by a given seller
+     * @param _seller A seller address
+     * @param _indexes An array of counters less than `openCount` of a given seller
+     * @return Array of multiple order information
+     */
     function getSellerOpenByIndexBatch(address _seller, uint256[] calldata _indexes)
         external
         view
@@ -1309,18 +1554,37 @@ contract FeedsNFTPasar is
         return _orders;
     }
 
+    /**
+     * @notice Get the total number of buyers participated in the Pasar
+     * @return The number of buyers
+     */
     function getBuyerCount() external view override returns (uint256) {
         return buyers.length;
     }
 
+    /**
+     * @notice Get buyer information of a given buyer
+     * @param _buyer The address of the buyer
+     * @return Buyer information
+     */
     function getBuyerByAddr(address _buyer) external view override returns (BuyerInfo memory) {
         return addrToBuyer[_buyer];
     }
 
+    /**
+     * @notice Enumerate buyer information of a given buyer
+     * @param _index A counter less than `getBuyerCount`
+     * @return Buyer information
+     */
     function getBuyerByIndex(uint256 _index) external view override returns (BuyerInfo memory) {
         return addrToBuyer[buyers[_index]];
     }
 
+    /**
+     * @notice Enumerate buyer information for multiple indexes
+     * @param _indexes An array of counters less than `getBuyerCount`
+     * @return Array of multiple buyer information
+     */
     function getBuyerByIndexBatch(uint256[] calldata _indexes) external view override returns (BuyerInfo[] memory) {
         BuyerInfo[] memory _buyers = new BuyerInfo[](_indexes.length);
 
@@ -1331,10 +1595,22 @@ contract FeedsNFTPasar is
         return _buyers;
     }
 
+    /**
+     * @notice Enumerate order information a given buyer has participated
+     * @param _buyer A buyer address
+     * @param _index A counter less than `orderCount` of a given buyer
+     * @return Order information
+     */
     function getBuyerOrderByIndex(address _buyer, uint256 _index) external view override returns (OrderInfo memory) {
         return orders[buyerOrders[_buyer][_index]];
     }
 
+    /**
+     * @notice Enumerate order information for multiple indexes a given buyer has participated
+     * @param _buyer A buyer address
+     * @param _indexes An array of counters less than `orderCount` of a given buyer
+     * @return Array of multiple order information
+     */
     function getBuyerOrderByIndexBatch(address _buyer, uint256[] calldata _indexes)
         external
         view
@@ -1350,10 +1626,22 @@ contract FeedsNFTPasar is
         return _orders;
     }
 
+    /**
+     * @notice Enumerate filled order information a given buyer has bought
+     * @param _buyer A buyer address
+     * @param _index A counter less than `filledCount` of a given buyer
+     * @return Order information
+     */
     function getBuyerFilledByIndex(address _buyer, uint256 _index) external view override returns (OrderInfo memory) {
         return orders[buyerFilledOrders[_buyer][_index]];
     }
 
+    /**
+     * @notice Enumerate filled order information for multiple indexes a given buyer has bought
+     * @param _buyer A buyer address
+     * @param _indexes An array of counters less than `filledCount` of a given buyer
+     * @return Array of multiple order information
+     */
     function getBuyerFilledByIndexBatch(address _buyer, uint256[] calldata _indexes)
         external
         view
