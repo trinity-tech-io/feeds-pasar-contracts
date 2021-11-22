@@ -417,7 +417,7 @@ interface IGalleria {
     function getUserByAddr(address _addr) external view returns (UserInfo memory);
 
     /**
-     * @notice Get user information of muultiple users
+     * @notice Get user information of multiple users
      * @param _addrs The addresses of the users
      * @return Array of multiple user information
      */
