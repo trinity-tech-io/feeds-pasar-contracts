@@ -1702,6 +1702,104 @@ module.exports = {
       "type": "event"
     },
     {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "_seller",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "_orderId",
+          "type": "uint256"
+        },
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "_tokenId",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "_amount",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "_price",
+          "type": "uint256"
+        }
+      ],
+      "name": "OrderSplittable",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "_seller",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "_buyer",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "_orderId",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "_royaltyOwner",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "_price",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "_amount",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "_priceLeft",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "_amountLeft",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "_royalty",
+          "type": "uint256"
+        }
+      ],
+      "name": "PartialFilled",
+      "type": "event"
+    },
+    {
       "inputs": [
         {
           "internalType": "uint256",
@@ -1733,6 +1831,29 @@ module.exports = {
         }
       ],
       "name": "buyOrder",
+      "outputs": [],
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_orderId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_amount",
+          "type": "uint256"
+        },
+        {
+          "internalType": "string",
+          "name": "_didUri",
+          "type": "string"
+        }
+      ],
+      "name": "buySplittableOrder",
       "outputs": [],
       "stateMutability": "payable",
       "type": "function"
@@ -1832,6 +1953,34 @@ module.exports = {
     {
       "inputs": [
         {
+          "internalType": "uint256",
+          "name": "_tokenId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_amount",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_price",
+          "type": "uint256"
+        },
+        {
+          "internalType": "string",
+          "name": "_didUri",
+          "type": "string"
+        }
+      ],
+      "name": "createSplittableOrder",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
           "internalType": "address",
           "name": "_buyer",
           "type": "address"
@@ -1887,7 +2036,7 @@ module.exports = {
               "type": "uint256"
             }
           ],
-          "internalType": "struct IPasarInfo.BuyerInfo",
+          "internalType": "struct IPasarDataAndEvents.BuyerInfo",
           "name": "",
           "type": "tuple"
         }
@@ -1953,7 +2102,7 @@ module.exports = {
               "type": "uint256"
             }
           ],
-          "internalType": "struct IPasarInfo.BuyerInfo",
+          "internalType": "struct IPasarDataAndEvents.BuyerInfo",
           "name": "",
           "type": "tuple"
         }
@@ -2019,7 +2168,7 @@ module.exports = {
               "type": "uint256"
             }
           ],
-          "internalType": "struct IPasarInfo.BuyerInfo[]",
+          "internalType": "struct IPasarDataAndEvents.BuyerInfo[]",
           "name": "",
           "type": "tuple[]"
         }
@@ -2143,7 +2292,7 @@ module.exports = {
               "type": "uint256"
             }
           ],
-          "internalType": "struct IPasarInfo.OrderInfo",
+          "internalType": "struct IPasarDataAndEvents.OrderInfo",
           "name": "",
           "type": "tuple"
         }
@@ -2254,7 +2403,7 @@ module.exports = {
               "type": "uint256"
             }
           ],
-          "internalType": "struct IPasarInfo.OrderInfo[]",
+          "internalType": "struct IPasarDataAndEvents.OrderInfo[]",
           "name": "",
           "type": "tuple[]"
         }
@@ -2365,7 +2514,7 @@ module.exports = {
               "type": "uint256"
             }
           ],
-          "internalType": "struct IPasarInfo.OrderInfo",
+          "internalType": "struct IPasarDataAndEvents.OrderInfo",
           "name": "",
           "type": "tuple"
         }
@@ -2476,7 +2625,7 @@ module.exports = {
               "type": "uint256"
             }
           ],
-          "internalType": "struct IPasarInfo.OrderInfo[]",
+          "internalType": "struct IPasarDataAndEvents.OrderInfo[]",
           "name": "",
           "type": "tuple[]"
         }
@@ -2487,6 +2636,19 @@ module.exports = {
     {
       "inputs": [],
       "name": "getCodeAddress",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "_codeAddress",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getLibraryLogicContract",
       "outputs": [
         {
           "internalType": "address",
@@ -2608,7 +2770,7 @@ module.exports = {
               "type": "uint256"
             }
           ],
-          "internalType": "struct IPasarInfo.OrderInfo",
+          "internalType": "struct IPasarDataAndEvents.OrderInfo",
           "name": "",
           "type": "tuple"
         }
@@ -2714,7 +2876,7 @@ module.exports = {
               "type": "uint256"
             }
           ],
-          "internalType": "struct IPasarInfo.OrderInfo[]",
+          "internalType": "struct IPasarDataAndEvents.OrderInfo[]",
           "name": "",
           "type": "tuple[]"
         }
@@ -2833,7 +2995,7 @@ module.exports = {
               "type": "uint256"
             }
           ],
-          "internalType": "struct IPasarInfo.OrderInfo",
+          "internalType": "struct IPasarDataAndEvents.OrderInfo",
           "name": "",
           "type": "tuple"
         }
@@ -2939,7 +3101,7 @@ module.exports = {
               "type": "uint256"
             }
           ],
-          "internalType": "struct IPasarInfo.OrderInfo[]",
+          "internalType": "struct IPasarDataAndEvents.OrderInfo[]",
           "name": "",
           "type": "tuple[]"
         }
@@ -2991,9 +3153,71 @@ module.exports = {
               "internalType": "uint256",
               "name": "platformFee",
               "type": "uint256"
+            },
+            {
+              "components": [
+                {
+                  "internalType": "address",
+                  "name": "buyerAddr",
+                  "type": "address"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "value",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "amount",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "address",
+                  "name": "royaltyOwner",
+                  "type": "address"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "royaltyFee",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "address",
+                  "name": "platformAddr",
+                  "type": "address"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "platformFee",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "fillTime",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "string",
+                  "name": "buyerUri",
+                  "type": "string"
+                }
+              ],
+              "internalType": "struct IPasarDataAndEvents.PartialFillInfo[]",
+              "name": "partialFills",
+              "type": "tuple[]"
+            },
+            {
+              "internalType": "uint256",
+              "name": "priceLeft",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "amountLeft",
+              "type": "uint256"
             }
           ],
-          "internalType": "struct IPasarUpgraded.OrderExtraInfo",
+          "internalType": "struct IPasarDataAndEvents.OrderExtraInfo",
           "name": "",
           "type": "tuple"
         }
@@ -3032,9 +3256,71 @@ module.exports = {
               "internalType": "uint256",
               "name": "platformFee",
               "type": "uint256"
+            },
+            {
+              "components": [
+                {
+                  "internalType": "address",
+                  "name": "buyerAddr",
+                  "type": "address"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "value",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "amount",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "address",
+                  "name": "royaltyOwner",
+                  "type": "address"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "royaltyFee",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "address",
+                  "name": "platformAddr",
+                  "type": "address"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "platformFee",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "fillTime",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "string",
+                  "name": "buyerUri",
+                  "type": "string"
+                }
+              ],
+              "internalType": "struct IPasarDataAndEvents.PartialFillInfo[]",
+              "name": "partialFills",
+              "type": "tuple[]"
+            },
+            {
+              "internalType": "uint256",
+              "name": "priceLeft",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "amountLeft",
+              "type": "uint256"
             }
           ],
-          "internalType": "struct IPasarUpgraded.OrderExtraInfo[]",
+          "internalType": "struct IPasarDataAndEvents.OrderExtraInfo[]",
           "name": "",
           "type": "tuple[]"
         }
@@ -3118,7 +3404,7 @@ module.exports = {
               "type": "uint256"
             }
           ],
-          "internalType": "struct IPasarInfo.SellerInfo",
+          "internalType": "struct IPasarDataAndEvents.SellerInfo",
           "name": "",
           "type": "tuple"
         }
@@ -3184,7 +3470,7 @@ module.exports = {
               "type": "uint256"
             }
           ],
-          "internalType": "struct IPasarInfo.SellerInfo",
+          "internalType": "struct IPasarDataAndEvents.SellerInfo",
           "name": "",
           "type": "tuple"
         }
@@ -3250,7 +3536,7 @@ module.exports = {
               "type": "uint256"
             }
           ],
-          "internalType": "struct IPasarInfo.SellerInfo[]",
+          "internalType": "struct IPasarDataAndEvents.SellerInfo[]",
           "name": "",
           "type": "tuple[]"
         }
@@ -3374,7 +3660,7 @@ module.exports = {
               "type": "uint256"
             }
           ],
-          "internalType": "struct IPasarInfo.OrderInfo",
+          "internalType": "struct IPasarDataAndEvents.OrderInfo",
           "name": "",
           "type": "tuple"
         }
@@ -3485,7 +3771,7 @@ module.exports = {
               "type": "uint256"
             }
           ],
-          "internalType": "struct IPasarInfo.OrderInfo[]",
+          "internalType": "struct IPasarDataAndEvents.OrderInfo[]",
           "name": "",
           "type": "tuple[]"
         }
@@ -3596,7 +3882,7 @@ module.exports = {
               "type": "uint256"
             }
           ],
-          "internalType": "struct IPasarInfo.OrderInfo",
+          "internalType": "struct IPasarDataAndEvents.OrderInfo",
           "name": "",
           "type": "tuple"
         }
@@ -3707,7 +3993,7 @@ module.exports = {
               "type": "uint256"
             }
           ],
-          "internalType": "struct IPasarInfo.OrderInfo[]",
+          "internalType": "struct IPasarDataAndEvents.OrderInfo[]",
           "name": "",
           "type": "tuple[]"
         }
@@ -3745,7 +4031,7 @@ module.exports = {
       "inputs": [],
       "name": "initialize",
       "outputs": [],
-      "stateMutability": "nonpayable",
+      "stateMutability": "pure",
       "type": "function"
     },
     {
@@ -3863,6 +4149,19 @@ module.exports = {
         }
       ],
       "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_codeAddress",
+          "type": "address"
+        }
+      ],
+      "name": "setLibraryLogicContract",
+      "outputs": [],
+      "stateMutability": "nonpayable",
       "type": "function"
     },
     {
