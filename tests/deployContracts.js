@@ -21,6 +21,15 @@ const testDeploy = async (deployer, gasPrice) => {
     expect(pasarCode, "Pasar contract bytecode").to.be.a("string");
     console.log("Pasar contract compiled");
 
+    const { abi: pasarLibABI, bytecode: pasarLibCode } = await compileContract(
+      path.resolve(__dirname, "../contracts/FeedsNFTPasar.sol"),
+      "FeedsNFTPasarLibrary"
+    );
+    expect(pasarLibABI, "Pasar library contract ABI").to.be.an("array");
+    expect(pasarLibCode, "Pasar library contract bytecode").to.be.a("string");
+    console.log("Pasar library contract compiled");
+
+
     const { abi: galleriaABI, bytecode: galleriaCode } = await compileContract(
       path.resolve(__dirname, "../contracts/FeedsNFTGalleria.sol"),
       "FeedsNFTGalleria"
@@ -41,6 +50,7 @@ const testDeploy = async (deployer, gasPrice) => {
     const web3 = await getWeb3();
     const stickerContract = new web3.eth.Contract(stickerABI);
     const pasarContract = new web3.eth.Contract(pasarABI);
+    const pasarLibContract = new web3.eth.Contract(pasarLibABI);
     const galleriaContract = new web3.eth.Contract(galleriaABI);
     const proxyContract = new web3.eth.Contract(proxyABI);
 
@@ -75,6 +85,20 @@ const testDeploy = async (deployer, gasPrice) => {
     expect(pasarStatus, "Pasar contract deploy transaction status").to.equal(true);
     expect(pasarAddr, "Pasar contract address").to.be.a("string").with.lengthOf("42");
     console.log(`Pasar contract deployed successfully at address ${pasarAddr}`);
+
+    //Deploy the Pasar library contract
+    const pasarLibData = pasarLibContract.deploy({ data: pasarLibCode }).encodeABI();
+    const pasarLibTx = {
+      from: acc.address,
+      value: 0,
+      data: pasarLibData,
+      gasPrice,
+    };
+
+    const { contractAddress: pasarLibAddr, status: pasarLibStatus } = await sendTxWaitForReceipt(pasarLibTx, acc);
+    expect(pasarLibStatus, "Pasar library contract deploy transaction status").to.equal(true);
+    expect(pasarLibAddr, "Pasar library contract address").to.be.a("string").with.lengthOf("42");
+    console.log(`Pasar library contract deployed successfully at address ${pasarLibAddr}`);
 
     //Deploy the Galleria contract
     const galleriaData = galleriaContract.deploy({ data: galleriaCode }).encodeABI();
@@ -179,6 +203,22 @@ const testDeploy = async (deployer, gasPrice) => {
     expect(initedPasar, "Proxied Pasar contract initialized result").to.equal(true);
     expect(tokenAddrPasar, "Proxied Pasar initialized with token address").to.equal(proxyStickerAddr);
     console.log(`Proxied Pasar contract initialized successfully with token address ${proxyStickerAddr}`);
+
+    // Set library contract address for proxied Pasar contract
+    const setLibPasarData = proxiedPasar.methods.setLibraryLogicContract(pasarLibAddr).encodeABI();
+    const setLibPasarTx = {
+      from: acc.address,
+      to: proxyPasarAddr,
+      value: 0,
+      data: setLibPasarData,
+      gasPrice,
+    };
+
+    const { status: setLibPasarStatus } = await sendTxWaitForReceipt(setLibPasarTx, acc);
+    const libAddrPasar = await proxiedPasar.methods.getLibraryLogicContract().call();
+    expect(setLibPasarStatus, "Proxied Pasar contract set library transaction status").to.equal(true);
+    expect(libAddrPasar, "Proxied Pasar library logic contract address").to.equal(pasarLibAddr);
+    console.log(`Proxied Pasar contract library logic set successfully with contract address ${pasarLibAddr}`);
 
     // Set platform fee rate
     const platformAddr = "0xF25F7A31d308ccf52b8EBCf4ee9FabdD8c8C5077";
