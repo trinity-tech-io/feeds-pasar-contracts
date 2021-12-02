@@ -72,6 +72,11 @@ interface IERC165 {
  */
 interface IFeedsContractProxiable {
     /**
+     * @dev Emit when the logic contract is updated
+     */
+    event CodeUpdated(address indexed _codeAddress);
+
+    /**
      * @dev upgrade the logic contract to one on the new code address
      * @param _newAddress New code address of the upgraded logic contract
      */
@@ -631,6 +636,8 @@ abstract contract BaseUtils is IFeedsContractProxiable {
         assembly {
             sstore(0xc5f16f0fcc639fa48a6947836d9850f504798523bf8c9a3a87d5876cf622bcf7, _newAddress)
         }
+
+        emit CodeUpdated(_newAddress);
     }
 
     /**
