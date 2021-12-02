@@ -31,16 +31,21 @@ const testPasar = async (pasarABI, pasarAddr, stickerABI, creator, seller, buyer
     const didUriSeller = "https://github.com/elastos-trinity/feeds-nft-contract";
     const didUriBuyer = "https://github.com/elastos-trinity/pasar-contracts";
     const platformAddr = "0xF25F7A31d308ccf52b8EBCf4ee9FabdD8c8C5077";
+    const splittableAmount = "20";
+    const splittablePrice = "9000000000000000000";
+    const partialAmount = "12";
+    const partialPrice = String((BigInt(splittablePrice) * BigInt(partialAmount)) / BigInt(splittableAmount));
 
     // Check pre-conditions
     const sellerTokenBalance = BigInt(await stickerContract.methods.balanceOf(accSeller.address, tokenId).call());
     assert(
-      sellerTokenBalance >= BigInt(saleAmount) + BigInt(auctionAmount) + BigInt(orderAmount),
+      sellerTokenBalance >=
+        BigInt(saleAmount) + BigInt(auctionAmount) + BigInt(orderAmount) + BigInt(splittableAmount),
       `Seller not enough token balance of id ${tokenId} before test`
     );
     const buyerEthBalance = BigInt(await web3.eth.getBalance(accBuyer.address));
     expect(
-      buyerEthBalance >= BigInt(salePrice) + BigInt(bid1Price) + gasBuffer,
+      buyerEthBalance >= BigInt(salePrice) + BigInt(bid1Price) + BigInt(partialPrice) + gasBuffer,
       "Buyer not enough ETH balance before test"
     );
     const bidderEthBalance = BigInt(await web3.eth.getBalance(accBidder.address));
@@ -135,8 +140,9 @@ const testPasar = async (pasarABI, pasarAddr, stickerABI, creator, seller, buyer
     const platformFeeAfterPurchase = BigInt(orderExtraAfterPurchase.platformFee);
     const sellerUriAfterPurchase = orderExtraAfterPurchase.sellerUri;
     const buyerUriAfterPurchase = orderExtraAfterPurchase.buyerUri;
-    
-    const sellerEarningAfterPurchase = filledValueAfterPurchase - royaltyValueAfterPurchase - platformFeeAfterPurchase;
+
+    const sellerEarningAfterPurchase =
+      filledValueAfterPurchase - royaltyValueAfterPurchase - platformFeeAfterPurchase;
     expect(purchaseStatus, "Purchase order transaction status").to.equal(true);
     expect(
       creatorEthBalanceAfterPurchase - creatorEthBalanceBeforePurchase,
@@ -297,7 +303,7 @@ const testPasar = async (pasarABI, pasarAddr, stickerABI, creator, seller, buyer
     const platformFeeAfterDeal = BigInt(orderExtraAfterDeal.platformFee);
     const sellerUriAfterDeal = orderExtraAfterDeal.sellerUri;
     const buyerUriAfterDeal = orderExtraAfterDeal.buyerUri;
-    
+
     const sellerEarningAfterDeal = filledValueAfterDeal - royaltyValueAfterDeal - platformFeeAfterDeal;
     expect(settleStatus, "Settle auction order transaction status").to.equal(true);
     expect(
@@ -388,7 +394,7 @@ const testPasar = async (pasarABI, pasarAddr, stickerABI, creator, seller, buyer
     const sellerTokenBalanceAfterCancel = BigInt(
       await stickerContract.methods.balanceOf(accSeller.address, tokenId).call()
     );
-    expect(cancelStatus, "Test change price transaction status").to.equal(true);
+    expect(cancelStatus, "Test cancel order transaction status").to.equal(true);
     expect(
       sellerTokenBalanceAfterCancel - sellerTokenBalanceBeforeCancel,
       "Seller token balance changed canceling test order"
@@ -397,6 +403,143 @@ const testPasar = async (pasarABI, pasarAddr, stickerABI, creator, seller, buyer
     const orderStateAfterCancel = BigInt(testOrderAfterCancel.orderState);
     expect(orderStateAfterCancel, "Order state after getting canceled").to.equal(BigInt(3));
     console.log(`${accSeller.address} successfully canceled order with order id ${testOrderId}`);
+
+    // Seller place splittable order
+    const sellerTokenBalanceBeforeSplittable = BigInt(
+      await stickerContract.methods.balanceOf(accSeller.address, tokenId).call()
+    );
+    const splittableData = pasarContract.methods
+      .createSplittableOrder(tokenId, splittableAmount, splittablePrice, didUriSeller)
+      .encodeABI();
+    const splittableTx = {
+      from: accSeller.address,
+      to: pasarAddr,
+      value: 0,
+      data: splittableData,
+      gasPrice,
+    };
+
+    const { status: splittableStatus } = await sendTxWaitForReceipt(splittableTx, accSeller);
+    const sellerTokenBalanceAfterSplittable = BigInt(
+      await stickerContract.methods.balanceOf(accSeller.address, tokenId).call()
+    );
+    expect(splittableStatus, "Splittable order transaction status").to.equal(true);
+    expect(
+      sellerTokenBalanceBeforeSplittable - sellerTokenBalanceAfterSplittable,
+      "Seller token balance changed placing splittable order"
+    ).to.equal(BigInt(splittableAmount));
+
+    const openOrderCountAfterSplittable = BigInt(await pasarContract.methods.getOpenOrderCount().call());
+    const lastOpenOrderAfterSplittable = await pasarContract.methods
+      .getOpenOrderByIndex(String(openOrderCountAfterSplittable - BigInt(1)))
+      .call();
+    const splittableOrderId = String(lastOpenOrderAfterSplittable.orderId);
+    console.log(`${accSeller.address} successfully placed splittable order with order id ${splittableOrderId}`);
+
+    // Buyer purchase partial order
+    const platformBalanceBeforePartial = BigInt(await web3.eth.getBalance(platformAddr));
+    const creatorEthBalanceBeforePartial = BigInt(await web3.eth.getBalance(accCreator.address));
+    const sellerEthBalanceBeforePartial = BigInt(await web3.eth.getBalance(accSeller.address));
+    const buyerEthBalanceBeforePartial = BigInt(await web3.eth.getBalance(accBuyer.address));
+    const buyerTokenBalanceBeforePartial = BigInt(
+      await stickerContract.methods.balanceOf(accBuyer.address, tokenId).call()
+    );
+    const partialData = pasarContract.methods.buySplittableOrder(splittableOrderId, partialAmount, didUriBuyer).encodeABI();
+    const partialTx = {
+      from: accBuyer.address,
+      to: pasarAddr,
+      value: partialPrice,
+      data: partialData,
+      gasPrice,
+    };
+
+    const {
+      transactionHash: partialTxhash,
+      gasUsed: partialGas,
+      status: partialStatus,
+    } = await sendTxWaitForReceipt(partialTx, accBuyer);
+    const { gasPrice: partialGasPrice } = await web3.eth.getTransaction(partialTxhash);
+    const partialFee = BigInt(partialGas) * BigInt(partialGasPrice);
+    const platformBalanceAfterPartial = BigInt(await web3.eth.getBalance(platformAddr));
+    const creatorEthBalanceAfterPartial = BigInt(await web3.eth.getBalance(accCreator.address));
+    const sellerEthBalanceAfterPartial = BigInt(await web3.eth.getBalance(accSeller.address));
+    const buyerEthBalanceAfterPartial = BigInt(await web3.eth.getBalance(accBuyer.address));
+    const buyerTokenBalanceAfterPartial = BigInt(
+      await stickerContract.methods.balanceOf(accBuyer.address, tokenId).call()
+    );
+
+    const orderExtraAfterPartial = await pasarContract.methods.getOrderExtraById(splittableOrderId).call();
+    const partialFillInfoAfterPartial = orderExtraAfterPartial.partialFills.slice(-1)[0];
+    const filledValueAfterPartial = BigInt(partialFillInfoAfterPartial.value);
+    const filledAmountAfterPartial = BigInt(partialFillInfoAfterPartial.amount);
+    const royaltyValueAfterPartial = BigInt(partialFillInfoAfterPartial.royaltyFee);
+    const platformFeeAfterPartial = BigInt(partialFillInfoAfterPartial.platformFee);
+    const buyerUriAfterPartial = partialFillInfoAfterPartial.buyerUri;
+    const priceLeftAfterPartial = BigInt(orderExtraAfterPartial.priceLeft);
+    const amountLeftAfterPartial = BigInt(orderExtraAfterPartial.amountLeft);
+
+    const sellerEarningAfterPartial = filledValueAfterPartial - royaltyValueAfterPartial - platformFeeAfterPartial;
+    expect(partialStatus, "Partial purchase order transaction status").to.equal(true);
+    expect(
+      creatorEthBalanceAfterPartial - creatorEthBalanceBeforePartial,
+      "Creator eth balance changed by partial order royalty"
+    ).to.equal(royaltyValueAfterPartial);
+    expect(
+      platformBalanceAfterPartial - platformBalanceBeforePartial,
+      "Platform eth balance changed by partial order platform fee"
+    ).to.equal(platformFeeAfterPartial);
+    expect(
+      sellerEthBalanceAfterPartial - sellerEthBalanceBeforePartial,
+      "Seller eth balance changed by partial order earning"
+    ).to.equal(sellerEarningAfterPartial);
+    expect(
+      buyerTokenBalanceAfterPartial - buyerTokenBalanceBeforePartial,
+      "Buyer token balance changed by partial purchase order"
+    ).to.equal(filledAmountAfterPartial);
+    expect(
+      buyerEthBalanceBeforePartial - partialFee - buyerEthBalanceAfterPartial,
+      "Buyer eth balance changed by partial purchase order"
+    ).to.equal(filledValueAfterPartial);
+    expect(
+      BigInt(splittablePrice) - filledValueAfterPartial,
+      "Order price left after partial purchase order"
+    ).to.equal(priceLeftAfterPartial);
+    expect(
+      BigInt(splittableAmount) - filledAmountAfterPartial,
+      "Order amount left after partial purchase order"
+    ).to.equal(amountLeftAfterPartial);
+    expect(buyerUriAfterPartial, "Buyer DID URI recorded in the partial order").to.equal(didUriBuyer);
+    console.log(`${accBuyer.address} successfully purchased partial order with order id ${splittableOrderId}`);
+
+    // Seller cancel splittable order
+    const sellerTokenBalanceBeforeCancel2 = BigInt(
+      await stickerContract.methods.balanceOf(accSeller.address, tokenId).call()
+    );
+    const cancel2Data = pasarContract.methods.cancelOrder(splittableOrderId).encodeABI();
+    const cancel2Tx = {
+      from: accSeller.address,
+      to: pasarAddr,
+      value: 0,
+      data: cancel2Data,
+      gasPrice,
+    };
+    const { status: cancel2Status } = await sendTxWaitForReceipt(cancel2Tx, accSeller);
+    const sellerTokenBalanceAfterCancel2 = BigInt(
+      await stickerContract.methods.balanceOf(accSeller.address, tokenId).call()
+    );
+
+    const orderInfoAfterCancel2 = await pasarContract.methods.getOrderById(splittableOrderId).call();
+    const orderStateAfterCancel2 = BigInt(orderInfoAfterCancel2.orderState);
+    const orderExtraAfterCancel2 = await pasarContract.methods.getOrderExtraById(splittableOrderId).call();
+    const amountLeftAfterCancel2 = BigInt(orderExtraAfterCancel2.amountLeft);
+
+    expect(cancel2Status, "Cancel splittable order transaction status").to.equal(true);
+    expect(
+      sellerTokenBalanceAfterCancel2 - sellerTokenBalanceBeforeCancel2,
+      "Seller token balance changed canceling splittable order"
+    ).to.equal(amountLeftAfterCancel2);
+    expect(orderStateAfterCancel2, "Splittable order state after getting canceled").to.equal(BigInt(3));
+    console.log(`${accSeller.address} successfully canceled splittable order with order id ${splittableOrderId}`);
 
     return true;
   } catch (err) {

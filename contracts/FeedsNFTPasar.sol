@@ -72,6 +72,11 @@ interface IERC165 {
  */
 interface IFeedsContractProxiable {
     /**
+     * @dev Emit when the logic contract is updated
+     */
+    event CodeUpdated(address indexed _codeAddress);
+
+    /**
      * @dev upgrade the logic contract to one on the new code address
      * @param _newAddress New code address of the upgraded logic contract
      */
@@ -522,16 +527,16 @@ interface IPasarDataAndEvents {
     );
 
     /**
-     * @dev MUST emit when a splittable order is partially filled.
+     * @dev MUST emit when a splittable order is (partially) filled.
      * The `_seller` argument MUST be the address of the seller who created the order.
-     * The `_buyer` argument MUST be the buyer in the partially fulfilled order.
-     * The `_orderId` argument MUST be the id of the order partially fulfilled.
+     * The `_buyer` argument MUST be the buyer in the (partially) fulfilled order.
+     * The `_orderId` argument MUST be the id of the order (partially) fulfilled.
      * The `_royaltyOwner` argument MUST be the address of the royalty owner of the token sold in the order.
-     * The `_price` argument MUST be the price paid for the partially fulfilled order.
-     * The `_amount` argument MUST be the amount of tokens purchased in the partially fulfilled order
-     * The `_priceLeft` argument MUST be the price for the tokens left in the splittable order after this partial purchase
-     * The `_amountLeft` argument MUST be the amount of tokens left in the splittable order after this partial purchase
-     * The `_royalty` argument MUST be the royalty paid for the partially fulfilled order.
+     * The `_price` argument MUST be the price paid for the (partially) fulfilled order.
+     * The `_amount` argument MUST be the amount of tokens purchased in the (partially) fulfilled order
+     * The `_priceLeft` argument MUST be the price for the tokens left in the splittable order after this (partial) purchase
+     * The `_amountLeft` argument MUST be the amount of tokens left in the splittable order after this (partial) purchase
+     * The `_royalty` argument MUST be the royalty paid for the (partially) fulfilled order.
      */
     event PartialFilled(
         address indexed _seller,
@@ -544,6 +549,20 @@ interface IPasarDataAndEvents {
         uint256 _amountLeft,
         uint256 _royalty
     );
+
+    /**
+     * @dev MUST emit when a splittable order is canceled.
+     * The `_seller` argument MUST be the address of the seller who created the order.
+     * The `_orderId` argument MUST be the id of the order partially fulfilled.
+     * The `_priceLeft` argument MUST be the price for the tokens left in the splittable order when it's canceled
+     * The `_amountLeft` argument MUST be the amount of tokens left in the splittable order when it's canceled
+     */
+    event PartialCanceled(address indexed _seller, uint256 indexed _orderId, uint256 _priceLeft, uint256 _amountLeft);
+
+    /**
+     * @dev Emit when the library logic contract is updated
+     */
+    event LibraryLogicContract(address indexed _codeAddress);
 }
 
 /**
@@ -985,6 +1004,8 @@ abstract contract BaseUtils is IFeedsContractProxiable {
         assembly {
             sstore(0xc5f16f0fcc639fa48a6947836d9850f504798523bf8c9a3a87d5876cf622bcf7, _newAddress)
         }
+
+        emit CodeUpdated(_newAddress);
     }
 
     /**
@@ -1063,6 +1084,8 @@ contract FeedsNFTPasar is
         assembly {
             sstore(0x8decb83e16232115210946013564c85a5b770f53d127a96cbb4db17de226ddf6, _codeAddress)
         }
+
+        emit LibraryLogicContract(_codeAddress);
     }
 
     /**
@@ -1365,6 +1388,13 @@ contract FeedsNFTPasar is
     function changeOrderPrice(uint256 _orderId, uint256 _price) external override inited reentrancyGuard {
         require(orders[_orderId].orderState == 1, "Invalid order state");
         require(msg.sender == orders[_orderId].sellerAddr, "Only seller can change own order price");
+
+        if (orders[_orderId].orderType == 3) {
+            require(
+                orderIdToExtraInfo[_orderId].priceLeft == orders[_orderId].price,
+                "Partially filled orders cannot change price"
+            );
+        }
 
         if (orders[_orderId].orderType == 2) {
             if (orders[_orderId].endTime < block.timestamp) {
@@ -1953,6 +1983,7 @@ contract FeedsNFTPasarLibrary is FeedsNFTPasarStorage {
         orderIdToExtraInfo[_id].platformAddr = platformAddress;
         orderIdToExtraInfo[_id].platformFee = orderIdToExtraInfo[_id].platformFee.add(newPartialFill.platformFee);
         orders[_id].updateTime = block.timestamp;
+
         orderIdToExtraInfo[_id].priceLeft = orderIdToExtraInfo[_id].priceLeft.sub(_value);
         orderIdToExtraInfo[_id].amountLeft = orderIdToExtraInfo[_id].amountLeft.sub(_amount);
 
@@ -2026,6 +2057,7 @@ contract FeedsNFTPasarLibrary is FeedsNFTPasarStorage {
             orderIdToExtraInfo[_id].amountLeft,
             newPartialFill.royaltyFee
         );
+        emit OrderFilled(seller, _buyer, _id, newPartialFill.royaltyOwner, _value, newPartialFill.royaltyFee);
         emit OrderPlatformFee(newPartialFill.platformAddr, newPartialFill.platformFee, seller, _buyer, _id);
     }
 
@@ -2063,7 +2095,18 @@ contract FeedsNFTPasarLibrary is FeedsNFTPasarStorage {
         sellerOpenOrders[seller].pop();
         addrToSeller[seller].openCount = sellerOpenOrders[seller].length;
 
-        token.safeTransferFrom(address(this), seller, orders[_id].tokenId, orders[_id].amount, PASAR_DATA_MAGIC);
+        if (orders[_id].orderType == 3) {
+            token.safeTransferFrom(
+                address(this),
+                seller,
+                orders[_id].tokenId,
+                orderIdToExtraInfo[_id].amountLeft,
+                PASAR_DATA_MAGIC
+            );
+            emit PartialCanceled(seller, _id, orderIdToExtraInfo[_id].priceLeft, orderIdToExtraInfo[_id].amountLeft);
+        } else {
+            token.safeTransferFrom(address(this), seller, orders[_id].tokenId, orders[_id].amount, PASAR_DATA_MAGIC);
+        }
 
         emit OrderCanceled(seller, _id);
     }

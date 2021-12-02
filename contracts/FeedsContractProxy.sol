@@ -23,6 +23,11 @@ interface IERC165 {
  */
 contract FeedsContractProxy {
     /**
+     * @dev Emit when the logic contract is updated
+     */
+    event CodeUpdated(address indexed _codeAddress);
+
+    /**
      * @notice Save the code address
      * @param _codeAddress The initial code address of the logic contract
      * @dev Code position in storage is
@@ -39,6 +44,8 @@ contract FeedsContractProxy {
         assembly {
             sstore(0xc5f16f0fcc639fa48a6947836d9850f504798523bf8c9a3a87d5876cf622bcf7, _codeAddress)
         }
+
+        emit CodeUpdated(_codeAddress);
     }
 
     /**

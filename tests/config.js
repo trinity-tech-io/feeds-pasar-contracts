@@ -1355,6 +1355,19 @@ module.exports = {
         {
           "indexed": true,
           "internalType": "address",
+          "name": "_codeAddress",
+          "type": "address"
+        }
+      ],
+      "name": "CodeUpdated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
           "name": "_operator",
           "type": "address"
         },
@@ -1421,6 +1434,19 @@ module.exports = {
         }
       ],
       "name": "ERC1155Received",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "_codeAddress",
+          "type": "address"
+        }
+      ],
+      "name": "LibraryLogicContract",
       "type": "event"
     },
     {
@@ -1736,6 +1762,37 @@ module.exports = {
         }
       ],
       "name": "OrderSplittable",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "_seller",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "_orderId",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "_priceLeft",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "_amountLeft",
+          "type": "uint256"
+        }
+      ],
+      "name": "PartialCanceled",
       "type": "event"
     },
     {
