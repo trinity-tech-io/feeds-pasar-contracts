@@ -278,7 +278,7 @@ interface IERC1155WithRoyalty {
     function tokenRoyaltyFeeBatch(uint256[] calldata _ids) external view returns (uint256[] memory);
 }
 
-interface IPasarDataAndEvents {
+interface IPasarV2DataAndEvents {
     /**
      * @dev Order info data structure
      * @param orderId The identifier of the order, incrementing uint256 starting from 0
@@ -621,7 +621,7 @@ interface IPasarDataAndEvents {
 /**
  * @dev Interface for trading orders in Pasar.
  */
-interface IPasarOrder {
+interface IPasarV2Order {
     /**
      * @notice Create a new order for sale at a fixed price
      * @param _tokenId The token type placed on sale
@@ -706,7 +706,7 @@ interface IPasarOrder {
     function changeOrderPrice(uint256 _orderId, uint256 _price) external;
 }
 
-interface IPasarInfo is IPasarDataAndEvents {
+interface IPasarV2Info is IPasarV2DataAndEvents {
     /**
      * @notice Get the NFT token address accepted by the Pasar
      * @return The NFT token address
@@ -893,7 +893,7 @@ interface IVersion {
 /**
  * @dev Interface for extra Pasar information added in Pasar upgrades
  */
-interface IPasarUpgraded is IPasarDataAndEvents {
+interface IPasarV2Upgraded is IPasarV2DataAndEvents {
     /**
      * @notice Get extra order information for a given order from upgraded Pasar contract
      * @param _orderId The order identifier
@@ -959,7 +959,7 @@ interface IPasarUpgraded is IPasarDataAndEvents {
      */
     function getSellerFeeInfo(address _seller, address _quoteToken) external view returns (SellerFeeInfo memory);
 
-    /** 
+    /**
      * @notice Get buyer fee information on a quote token
      * @param _buyer The address of the buyer to query fee information with
      * @param _quoteToken The address of the quote token to query fee information with
@@ -1106,7 +1106,7 @@ abstract contract BaseUtils is IFeedsContractProxiable {
  * @dev The storage declaration contract for Pasar
  */
 
-abstract contract FeedsNFTPasarStorage is IPasarDataAndEvents, BaseUtils {
+abstract contract FeedsNFTPasarV2Storage is IPasarV2DataAndEvents, BaseUtils {
     address internal tokenAddress;
     IERC1155WithRoyalty internal token;
 
@@ -1139,14 +1139,14 @@ abstract contract FeedsNFTPasarStorage is IPasarDataAndEvents, BaseUtils {
 /**
  * @notice The implementation of the Pasar market contract for trading Feeds sticker art tokens
  */
-contract FeedsNFTPasar is
+contract FeedsNFTPasarV2 is
     IERC165,
     IERC1155TokenReceiver,
-    IPasarOrder,
-    IPasarInfo,
+    IPasarV2Order,
+    IPasarV2Info,
     IVersion,
-    IPasarUpgraded,
-    FeedsNFTPasarStorage
+    IPasarV2Upgraded,
+    FeedsNFTPasarV2Storage
 {
     using SafeMath for uint256;
     using AddressUtils for address;
@@ -1970,17 +1970,27 @@ contract FeedsNFTPasar is
      * @param _quoteToken The address of the quote token to query fee information with
      * @return The seller fee information
      */
-    function getSellerFeeInfo(address _seller, address _quoteToken) external view override returns (SellerFeeInfo memory) {
+    function getSellerFeeInfo(address _seller, address _quoteToken)
+        external
+        view
+        override
+        returns (SellerFeeInfo memory)
+    {
         return addrToSellerFees[_seller][_quoteToken];
     }
 
-    /** 
+    /**
      * @notice Get buyer fee information on a quote token
      * @param _buyer The address of the buyer to query fee information with
      * @param _quoteToken The address of the quote token to query fee information with
      * @return The buyer fee information
      */
-    function getBuyerFeeInfo(address _buyer, address _quoteToken) external view override returns (BuyerFeeInfo memory) {
+    function getBuyerFeeInfo(address _buyer, address _quoteToken)
+        external
+        view
+        override
+        returns (BuyerFeeInfo memory)
+    {
         return addrToBuyerFees[_buyer][_quoteToken];
     }
 }
@@ -1989,7 +1999,7 @@ contract FeedsNFTPasar is
  * @dev Library logic contract for Pasar
  * @dev Split internal library code logic to avoid reaching the max code size limit for the Pasar contract
  */
-contract FeedsNFTPasarLibrary is FeedsNFTPasarStorage {
+contract FeedsNFTPasarV2Library is FeedsNFTPasarV2Storage {
     using SafeMath for uint256;
 
     function _newOrderSeller(address _seller, uint256 _id) public inited {
