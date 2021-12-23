@@ -1102,8 +1102,18 @@ contract FeedsNFTPasar is
             codeAddress := sload(0x8decb83e16232115210946013564c85a5b770f53d127a96cbb4db17de226ddf6)
         }
 
+        require(codeAddress != address(0x0), "Library contract not set");
+
         (_success, _returnData) = codeAddress.delegatecall(_data);
-        require(_success, string(_returnData));
+
+        if (_success == false) {
+            assembly {
+                let ptr := mload(0x40)
+                let size := returndatasize()
+                returndatacopy(ptr, 0, size)
+                revert(ptr, size)
+            }
+        }
     }
 
     /**
