@@ -25,31 +25,33 @@ const writeFile = async (abi, pathName) => {
   }
 }
 
+const generateAbi = async (solPath, bytecode ,outputAbiPath, contractName) => {
+    console.log(`Prepare generate ${contractName} ABIs`);
+    //generate contract abi
+    const { abi: contractABI, bytecode: contractByteCode } = await compile(
+      path.resolve(__dirname, solPath),
+      bytecode
+    );
+    expect(contractABI, "Contract ABI").to.be.an("array");
+    expect(contractByteCode, "Contract bytecode").to.be.a("string");
+
+    writeFile(contractABI, outputAbiPath);
+    console.log(`Compiled: Logic contract (${contractName}) and ABIs generated`);
+}
+
 (async () => {
   try {
-    console.log("==> try to compile NFT contract");
-
+    console.log("==> Try to compile NFT contract");
     mkdir();
-    const { abi: nftABI, bytecode: nftCode } = await compile(
-      path.resolve(__dirname, "../contracts/FeedsNFTSticker.sol"),
-      "FeedsNFTSticker"
-    );
-    expect(nftABI, "NFT contract ABI").to.be.an("array");
-    expect(nftCode, "NFT contract bytecode").to.be.a("string");
+    
+    // //generate sticker contract abi
+    await generateAbi('../contracts/FeedsNFTSticker.sol', 'FeedsNFTSticker', '../abis/FeedsNFTSticker.json', 'Sticker');
 
-    writeFile(nftABI, "../abis/FeedsNFTSticker.json");
-    console.log("Compiled: Logic contract (NFT) and ABIs generated");
+    // //generate Pasar contract abi
+    await generateAbi('../contracts/FeedsNFTPasar.sol', 'FeedsNFTPasar', '../abis/FeedsNFTPasar.json', 'Pasar');
 
-    const { abi: pasarABI, bytecode: pasarCode} = await compile(
-      path.resolve(__dirname, "../contracts/FeedsNFTPasar.sol"),
-      "FeedsNFTPasar"
-    );
-
-    expect(pasarABI, "Pasar contract ABI").to.be.an("array");
-    expect(pasarCode, "Pasar contract bytecode").to.be.a("string");
-
-    writeFile(pasarABI, "../abis/FeedsNFTPasar.json");
-    console.log("Compiled: Logic contract (Pasar) and ABIs generated");
+    // //generate Galleria contract abi
+    await generateAbi('../contracts/FeedsNFTGalleria.sol', 'FeedsNFTGalleria', '../abis/FeedsNFTGalleria.json', 'Galleria');
   } catch (err) {
     console.error("Contracts compiled failed");
   }
