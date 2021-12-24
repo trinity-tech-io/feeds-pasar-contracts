@@ -87,9 +87,6 @@ const sendTxWaitForReceipt = async (tx, acc) => {
       tx.gas = Math.round(parseInt(await web3.eth.estimateGas(tx)) * 1.2);
     }
 
-   // console.log(`==>tx.gasPrice: ${tx.gasPrice}`);
-   // console.log(`==>gas: ${tx.gas}`);
-
     const signedTx = await acc.signTransaction(tx);
     const receipt = await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
     return receipt;
