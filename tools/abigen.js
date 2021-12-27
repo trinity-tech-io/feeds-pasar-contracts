@@ -20,12 +20,12 @@ const writeFile = async (abi, pathName) => {
       if (err) throw err;
     });
   } catch (err) {
-    console.error("Write file failed");
-    throw err
+    console.error("Write file failed", err);
   }
 }
 
-const generateAbi = async (solPath, bytecode ,outputAbiPath, contractName) => {
+const generateAbi = async (solPath, bytecode, contractName) => {
+  try {
     console.log(`Prepare generate ${contractName} ABIs`);
     //generate contract abi
     const { abi: contractABI, bytecode: contractByteCode } = await compile(
@@ -34,25 +34,35 @@ const generateAbi = async (solPath, bytecode ,outputAbiPath, contractName) => {
     );
     expect(contractABI, "Contract ABI").to.be.an("array");
     expect(contractByteCode, "Contract bytecode").to.be.a("string");
-
-    writeFile(contractABI, outputAbiPath);
     console.log(`Compiled: Logic contract (${contractName}) and ABIs generated`);
+    return contractABI;
+  } catch (error) {
+   console.log('Generate abi failed', error); 
+  }
 }
 
 (async () => {
   try {
-    console.log("==> Try to compile NFT contract");
+    console.log("Prepare generate abis");
     mkdir();
     
     // //generate sticker contract abi
-    await generateAbi('../contracts/FeedsNFTSticker.sol', 'FeedsNFTSticker', '../abis/FeedsNFTSticker.json', 'Sticker');
+    const stickerAbi =  await generateAbi('../contracts/FeedsNFTSticker.sol', 'FeedsNFTSticker', 'Sticker');
+    await writeFile(stickerAbi, '../abis/FeedsNFTSticker.json');
 
     // //generate Pasar contract abi
-    await generateAbi('../contracts/FeedsNFTPasar.sol', 'FeedsNFTPasar', '../abis/FeedsNFTPasar.json', 'Pasar');
+    // await generateAbi('../contracts/FeedsNFTPasar.sol', 'FeedsNFTPasar', '../abis/FeedsNFTPasar.json', 'Pasar');
+    const pasarAbi = await generateAbi('../contracts/FeedsNFTPasarV2.sol', 'FeedsNFTPasarV2', 'Pasar');
+    await writeFile(pasarAbi, '../abis/FeedsNFTPasarV2.json');
 
     // //generate Galleria contract abi
-    await generateAbi('../contracts/FeedsNFTGalleria.sol', 'FeedsNFTGalleria', '../abis/FeedsNFTGalleria.json', 'Galleria');
+    const galleriaAbi = await generateAbi('../contracts/FeedsNFTGalleria.sol', 'FeedsNFTGalleria', 'Galleria');
+    await writeFile(galleriaAbi, '../abis/FeedsNFTGalleria.json');
   } catch (err) {
     console.error("Contracts compiled failed");
   }
 })();
+
+module.exports = {
+  generateAbi
+};
