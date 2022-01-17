@@ -39,10 +39,11 @@ module.exports = {
 if (require.main == module) {
   (async () => {
     try {
-      const { rpcUrl, nftAddr, pasarAddr } = await getParams();
+      const { rpcUrl, nftAddr, pasarAddr, galleriaAddr } = await getParams();
       console.log("rpcUrl   : ", rpcUrl);
       console.log("nftAddr  : ", nftAddr);
       console.log("pasarAddr: ", pasarAddr);
+      console.log("galleriaAddr: ", galleriaAddr);
       console.log("");
 
       if (nftAddr) {
@@ -54,6 +55,12 @@ if (require.main == module) {
         console.log("====>>> Pasar contract address details =====");
         await getVersion("../abis/FeedsNFTPasar.json", pasarAddr, rpcUrl);
         await getPlatformFee("../abis/FeedsNFTPasar.json", pasarAddr, rpcUrl);
+      }
+
+      if (galleriaAddr) {
+        console.log("====>>> Galleria contract address details =====");
+        await getVersion("../abis/FeedsNFTGalleria.json", galleriaAddr, rpcUrl);
+        await getPlatformFee("../abis/FeedsNFTGalleria.json", galleriaAddr, rpcUrl);
       }
 
     } catch (err) {

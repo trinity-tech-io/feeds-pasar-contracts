@@ -8,7 +8,8 @@ const getParams = async () => {
     program
       .option("--rpcUrl <url>", "eth smartcontract sidechain rpc url", config.rpcUrl)
       .option("--nftAddr <address>", "the address of NFT contract", config.nftAddr)
-      .option("--pasarAddr <address>", "the address of Pasar contract", config.pasarAddr);
+      .option("--pasarAddr <address>", "the address of Pasar contract", config.pasarAddr)
+      .option("--galleriaAddr <address>", "the address of Galleria contract", config.galleriaAddr);
     program.parse();
     const options = program.opts();
     return options;

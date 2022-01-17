@@ -236,7 +236,7 @@ if (require.main == module) {
           const galleriaProxyAddr = await deployGalleriaProxy(web3, account, gasPrice, galleriaABI, galleriaAddr, 'GalleriaProxy', stickerProxyAddress, minFee, platformAddr);
           if (!galleriaProxyAddr)
             return;
-          console.log(`Pasar proxy contract deployed at ${galleriaProxyAddr}`);
+          console.log(`Galleria proxy contract deployed at ${galleriaProxyAddr}`);
         }
       }
       console.log("Contracts deployed successfully");
