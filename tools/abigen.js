@@ -13,7 +13,7 @@ const abipath = "../abis";
     // //generate Pasar contract abi
     // await generateAbi('../contracts/FeedsNFTPasar.sol', 'FeedsNFTPasar', '../abis/FeedsNFTPasar.json', 'Pasar');
     const {contractABI: pasarAbi} = await generatePasarAbi();
-    await writeFile(pasarAbi, '../abis/FeedsNFTPasarV2.json');
+    await writeFile(pasarAbi, '../abis/FeedsNFTPasar.json');
 
     // //generate Galleria contract abi
     const {contractABI: galleriaAbi} = await generateGalleriaAbi();

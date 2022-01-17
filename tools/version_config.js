@@ -8,6 +8,9 @@ module.exports = {
   // the address of Pasar contract (must be proxied address)
   pasarAddr: "",
 
+  // the address of Galleria contract (must be proxied address)
+  galleriaAddr: "",
+
   proxiableABI: [
     {
       "inputs": [],
