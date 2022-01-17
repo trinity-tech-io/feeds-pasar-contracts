@@ -32,6 +32,18 @@ const getPlatformFee = async(abiPath, codeAddr, rpcUrl = null) => {
   console.log(`platformFee : ${_platformFeeRate}`);
 }
 
+const getFeeParams = async(abiPath, codeAddr, rpcUrl = null) => {
+  const jsonStr = await loadFile(abiPath);
+  const nftABI = JSON.parse(jsonStr);
+
+  const web3 = await getWeb3(rpcUrl);
+  const nftContract = new web3.eth.Contract(nftABI, codeAddr);
+
+  const {_platformAddress, _minFee} = await nftContract.methods.getFeeParams().call();
+  console.log(`platformAddr: ${_platformAddress}`);
+  console.log(`minFee : ${_minFee}`);
+}
+
 module.exports = {
   getVersion,
 };
@@ -60,7 +72,7 @@ if (require.main == module) {
       if (galleriaAddr) {
         console.log("====>>> Galleria contract address details =====");
         await getVersion("../abis/FeedsNFTGalleria.json", galleriaAddr, rpcUrl);
-        await getPlatformFee("../abis/FeedsNFTGalleria.json", galleriaAddr, rpcUrl);
+        await getFeeParams("../abis/FeedsNFTGalleria.json", galleriaAddr, rpcUrl);
       }
 
     } catch (err) {
