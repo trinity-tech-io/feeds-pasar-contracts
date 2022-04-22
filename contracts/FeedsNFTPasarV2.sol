@@ -1105,7 +1105,6 @@ abstract contract BaseUtils is IFeedsContractProxiable {
 /**
  * @dev The storage declaration contract for Pasar
  */
-
 abstract contract FeedsNFTPasarV2Storage is IPasarV2DataAndEvents, BaseUtils {
     address internal tokenAddress;
     IERC1155WithRoyalty internal token;
